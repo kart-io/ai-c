@@ -1,0 +1,27 @@
+# Clippy configuration for AI-C TUI
+# This file configures clippy linting rules
+
+# Avoid false positives for expected module complexity
+cognitive-complexity-threshold = 50
+type-complexity-threshold = 500
+
+# Allow longer function names for descriptive Git operations
+too-many-arguments-threshold = 8
+too-many-lines-threshold = 120
+
+# Performance lints
+avoid-breaking-exported-api = false
+
+# Documentation requirements
+missing-docs-in-private-items = false
+
+# Allow certain patterns common in async code
+single-match-else = false
+result-large-err = false
+
+# TUI-specific allowances
+enum-variant-names = false
+module-name-repetitions = false
+
+# Git operation specific
+similar-names-threshold = 5

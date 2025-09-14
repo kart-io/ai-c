@@ -1,0 +1,112 @@
+[package]
+name = "ai-c"
+version = "0.1.0"
+edition = "2021"
+authors = ["AI-C Team"]
+description = "Intelligent Git commit tool with Agent architecture and MCP protocol support"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ai-c/ai-c-tui"
+keywords = ["git", "tui", "ai", "commit", "mcp"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+# Core async runtime - performance requirement: startup time < 1s
+tokio = { version = "=1.35.1", features = ["full"] }
+
+# Terminal UI framework - memory requirement: < 150MB
+ratatui = "=0.25.0"
+crossterm = "=0.27.0"
+
+# Git operations - performance requirement: file status refresh < 200ms
+git2 = "=0.18.1"
+
+# Logging and tracing
+tracing = "=0.1.40"
+tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
+
+# Error handling
+thiserror = "=1.0.56"
+anyhow = "=1.0.79"
+
+# Async traits for Agent system
+async-trait = "=0.1.77"
+
+# Serialization for MCP protocol
+serde = { version = "=1.0.195", features = ["derive"] }
+serde_json = "=1.0.111"
+
+# HTTP client for AI services and MCP - performance requirement: communication < 100ms
+reqwest = { version = "=0.11.23", features = ["json", "stream"] }
+
+# WebSocket support for MCP
+tokio-tungstenite = "=0.21.0"
+
+# Configuration management
+toml = "=0.8.8"
+config = "=0.14.0"
+dirs = "=5.0.1"
+
+# Time utilities
+chrono = { version = "=0.4.31", features = ["serde"] }
+
+# Collections and utilities
+indexmap = "=2.1.0"
+uuid = { version = "=1.6.1", features = ["v4", "serde"] }
+
+# Concurrent data structures for Agent system
+dashmap = "=5.5.3"
+parking_lot = "=0.12.1"
+
+# Performance monitoring
+metrics = { version = "=0.22.0", optional = true }
+
+[dev-dependencies]
+# Testing framework
+tokio-test = "=0.4.3"
+criterion = { version = "=0.5.1", features = ["html_reports"] }
+tempfile = "=3.8.1"
+mockall = "=0.12.1"
+
+# Test coverage - install separately with: cargo install cargo-tarpaulin
+# tarpaulin = "=0.27.3"
+
+[profile.dev]
+# Development profile optimized for compilation speed
+opt-level = 0
+debug = true
+overflow-checks = true
+
+[profile.release]
+# Production profile optimized for performance requirements
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.test]
+# Test profile with debug info for coverage
+opt-level = 1
+debug = true
+
+[[bin]]
+name = "ai-c"
+path = "src/main.rs"
+
+# Benchmarks will be added later
+# [[bench]]
+# name = "performance_benchmarks"
+# harness = false
+
+[features]
+default = ["git-operations", "agent-system", "mcp-protocol"]
+
+# Core feature flags
+git-operations = []
+agent-system = []
+mcp-protocol = []
+
+# Optional features
+development-tools = ["tracing-subscriber/fmt"]
+performance-monitoring = ["metrics"]
