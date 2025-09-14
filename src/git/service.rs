@@ -13,7 +13,7 @@ use tokio::sync::{RwLock, Mutex};
 use tracing::{debug, info, instrument, warn};
 
 use super::{
-    cache::StatusCache, find_git_root, BranchInfo, CommitInfo, FileStatus, GitStatusFlags,
+    cache::StatusCache, find_git_root, operations::GitOperations, BranchInfo, CommitInfo, FileStatus, GitStatusFlags,
     RemoteInfo, StashInfo, TagInfo,
 };
 use crate::{
@@ -528,7 +528,17 @@ impl GitService {
             return Ok(());
         }
 
-        debug!("Mock switch_branch operation to {}", name);
+        debug!("Switching to branch: {}", name);
+
+        // Lock repository for mutable access
+        let mut repo = self.repo.lock().await;
+        let operations = GitOperations::new(&mut *repo);
+        operations.switch_branch(name)?;
+
+        // Clear cache after branch switch
+        self.status_cache.write().await.invalidate();
+
+        info!("Successfully switched to branch: {}", name);
         Ok(())
     }
 

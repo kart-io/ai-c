@@ -69,7 +69,7 @@ impl Config {
             .map_err(|e| AppError::Io(e))?;
 
         let config: Config = toml::from_str(&content)
-            .map_err(|e| AppError::Config(config::ConfigError::Message(e.to_string())))?;
+            .map_err(|e| AppError::application(&format!("Failed to parse config file: {}", e)))?;
 
         config.validate()?;
 
@@ -89,7 +89,7 @@ impl Config {
         }
 
         let content = toml::to_string_pretty(self)
-            .map_err(|e| AppError::Config(config::ConfigError::Message(e.to_string())))?;
+            .map_err(|e| AppError::application(&format!("Failed to serialize config: {}", e)))?;
 
         fs::write(path, content)
             .await
@@ -105,22 +105,22 @@ impl Config {
 
         // Validate performance thresholds
         if self.performance.startup_timeout_ms == 0 {
-            return Err(AppError::Config(config::ConfigError::Message(
-                "startup_timeout_ms must be greater than 0".to_string(),
-            )));
+            return Err(AppError::application(
+                "startup_timeout_ms must be greater than 0"
+            ));
         }
 
         if self.performance.git_status_timeout_ms == 0 {
-            return Err(AppError::Config(config::ConfigError::Message(
-                "git_status_timeout_ms must be greater than 0".to_string(),
-            )));
+            return Err(AppError::application(
+                "git_status_timeout_ms must be greater than 0"
+            ));
         }
 
         // Validate UI settings
         if self.ui.sidebar_width < 10 || self.ui.sidebar_width > 100 {
-            return Err(AppError::Config(config::ConfigError::Message(
-                "sidebar_width must be between 10 and 100".to_string(),
-            )));
+            return Err(AppError::application(
+                "sidebar_width must be between 10 and 100"
+            ));
         }
 
         debug!("Configuration validation passed");
