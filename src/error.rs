@@ -57,6 +57,14 @@ pub enum AppError {
     /// Generic application errors
     #[error("Application error: {message}")]
     Application { message: String },
+
+    /// Invalid operation errors
+    #[error("Invalid operation: {0}")]
+    InvalidOperation(String),
+
+    /// Invalid state errors
+    #[error("Invalid state: {0}")]
+    InvalidState(String),
 }
 
 impl AppError {
@@ -109,6 +117,8 @@ impl AppError {
             AppError::Serde(_) => false,
             AppError::State { .. } => true,
             AppError::Application { .. } => true,
+            AppError::InvalidOperation(_) => false,
+            AppError::InvalidState(_) => true,
         }
     }
 
@@ -126,6 +136,8 @@ impl AppError {
             AppError::Performance { .. } => ErrorSeverity::Low,
             AppError::State { .. } => ErrorSeverity::Medium,
             AppError::Application { .. } => ErrorSeverity::Medium,
+            AppError::InvalidOperation(_) => ErrorSeverity::Medium,
+            AppError::InvalidState(_) => ErrorSeverity::Medium,
         }
     }
 }

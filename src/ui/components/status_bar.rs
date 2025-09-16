@@ -4,9 +4,8 @@
 
 use crossterm::event::KeyEvent;
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    widgets::{Block, Paragraph},
+    widgets::Paragraph,
     Frame,
 };
 

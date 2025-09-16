@@ -4,7 +4,6 @@
 //! for multiple themes and easy customization.
 
 use ratatui::style::{Color, Modifier, Style};
-use serde::{Deserialize, Serialize};
 
 use crate::error::{AppError, AppResult};
 
@@ -33,41 +32,41 @@ impl Theme {
         }
     }
 
-    /// Default theme (dark with blue accents)
+    /// Default theme (VS Code dark theme to match demo)
     pub fn default_theme() -> Self {
         Self {
             name: "default".to_string(),
             colors: ColorScheme {
-                background: Color::Reset,
-                foreground: Color::White,
-                primary: Color::Blue,
-                secondary: Color::Cyan,
-                accent: Color::Yellow,
-                success: Color::Green,
-                warning: Color::Yellow,
-                error: Color::Red,
-                info: Color::Blue,
-                muted: Color::DarkGray,
+                background: Color::Rgb(30, 30, 30),      // #1e1e1e - main background
+                foreground: Color::Rgb(212, 212, 212),   // #d4d4d4 - main text
+                primary: Color::Rgb(0, 122, 204),        // #007acc - VS Code blue
+                secondary: Color::Rgb(37, 37, 38),       // #252526 - sidebar background
+                accent: Color::Rgb(255, 193, 7),         // #ffc107 - yellow accent
+                success: Color::Rgb(40, 167, 69),        // #28a745 - green
+                warning: Color::Rgb(255, 193, 7),        // #ffc107 - yellow
+                error: Color::Rgb(220, 53, 69),          // #dc3545 - red
+                info: Color::Rgb(0, 122, 204),           // #007acc - blue
+                muted: Color::Rgb(150, 150, 150),        // #969696 - muted text
             },
             styles: StyleScheme::default(),
         }
     }
 
-    /// Dark theme with softer colors
+    /// Dark theme matching VS Code dark theme from tui-demo.html
     pub fn dark_theme() -> Self {
         Self {
             name: "dark".to_string(),
             colors: ColorScheme {
-                background: Color::Black,
-                foreground: Color::Rgb(220, 220, 220),
-                primary: Color::Rgb(100, 149, 237),
-                secondary: Color::Rgb(72, 209, 204),
-                accent: Color::Rgb(255, 215, 0),
-                success: Color::Rgb(50, 205, 50),
-                warning: Color::Rgb(255, 165, 0),
-                error: Color::Rgb(220, 20, 60),
-                info: Color::Rgb(135, 206, 235),
-                muted: Color::Rgb(105, 105, 105),
+                background: Color::Rgb(30, 30, 30),      // #1e1e1e - main background
+                foreground: Color::Rgb(212, 212, 212),   // #d4d4d4 - main text
+                primary: Color::Rgb(0, 122, 204),        // #007acc - VS Code blue
+                secondary: Color::Rgb(37, 37, 38),       // #252526 - sidebar background
+                accent: Color::Rgb(255, 193, 7),         // #ffc107 - yellow accent
+                success: Color::Rgb(40, 167, 69),        // #28a745 - green
+                warning: Color::Rgb(255, 193, 7),        // #ffc107 - yellow
+                error: Color::Rgb(220, 53, 69),          // #dc3545 - red
+                info: Color::Rgb(0, 122, 204),           // #007acc - blue
+                muted: Color::Rgb(150, 150, 150),        // #969696 - muted text
             },
             styles: StyleScheme::default(),
         }
@@ -101,9 +100,19 @@ impl Theme {
         ))
     }
 
-    /// Get style for borders
+    /// Get style for borders (VS Code style)
     pub fn border_style(&self) -> Style {
-        Style::default().fg(self.colors.muted)
+        Style::default().fg(Color::Rgb(62, 62, 66)) // #3e3e42 - VS Code border color
+    }
+
+    /// Get background style for sidebar
+    pub fn sidebar_background_style(&self) -> Style {
+        Style::default().bg(self.colors.secondary) // #252526 - sidebar background
+    }
+
+    /// Get background style for main content area
+    pub fn content_background_style(&self) -> Style {
+        Style::default().bg(self.colors.background) // #1e1e1e - main background
     }
 
     /// Get style for normal text
@@ -160,6 +169,11 @@ impl Theme {
     /// Get style for muted/disabled text
     pub fn muted_style(&self) -> Style {
         Style::default().fg(self.colors.muted)
+    }
+
+    /// Get style for status bar/sync status
+    pub fn status_style(&self) -> Style {
+        Style::default().fg(self.colors.secondary)
     }
 
     /// Get style for Git status indicators

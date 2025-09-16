@@ -5,13 +5,15 @@
 pub mod sidebar;
 pub mod status_bar;
 pub mod tabs;
+pub mod diff_viewer;
 
 pub use sidebar::SidebarComponent;
 pub use status_bar::StatusBarComponent;
 pub use tabs::*;
+pub use diff_viewer::DiffViewerComponent;
 
 use crossterm::event::KeyEvent;
-use ratatui::{backend::Backend, layout::Rect, Frame};
+use ratatui::{layout::Rect, Frame};
 
 use crate::{app::state::AppState, error::AppResult, ui::theme::Theme};
 

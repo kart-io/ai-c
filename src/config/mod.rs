@@ -9,7 +9,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tokio::fs;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 use crate::error::{AppError, AppResult};
 

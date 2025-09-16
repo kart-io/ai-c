@@ -137,10 +137,9 @@ async fn test_ui_theme_loading() {
 #[tokio::test]
 async fn test_message_bus_performance() {
     use ai_c::ai::{
-        agent::AgentCapability, AgentMessage, AgentTask, MessageBus,
+        AgentTask, MessageBus,
     };
     use tokio::sync::mpsc;
-    use uuid::Uuid;
 
     let message_bus = MessageBus::new();
 
@@ -155,14 +154,20 @@ async fn test_message_bus_performance() {
         .unwrap();
 
     // Create a test task
+    use ai_c::ai::{agent::AgentTaskType, TaskPriority, message_bus::AgentMessage};
+
     let task = AgentTask::new(AgentTaskType::GenerateCommitMessage {
         staged_files: vec!["test.rs".to_string()],
         diff_content: "test diff".to_string(),
         context: None,
-    });
+    }).with_priority(TaskPriority::Normal);
 
     // Create message
-    let message = AgentMessage::task_assignment(agent_id.clone(), "test-manager".to_string(), task);
+    let message = AgentMessage::task_assignment(
+        agent_id.clone(),
+        "test-manager".to_string(),
+        task
+    );
 
     let start_time = Instant::now();
 
@@ -241,7 +246,7 @@ fn get_memory_usage_mb() -> f64 {
 
 /// Test application module structure
 #[test]
-fn test_module_structure() {
+async fn test_module_structure() {
     // Verify all expected modules are accessible
     use ai_c::{ai, app, config, error, git, ui};
 

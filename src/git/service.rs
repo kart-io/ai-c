@@ -3,17 +3,17 @@
 //! High-performance Git operations with intelligent caching and async support.
 
 use chrono::{DateTime, Utc};
-use git2::{BranchType, ObjectType, Repository, StatusOptions};
+use git2::{Repository, StatusOptions};
 use std::{
     path::{Path, PathBuf},
     sync::Arc,
-    time::{Duration, Instant, SystemTime},
+    time::{Duration, Instant},
 };
 use tokio::sync::{RwLock, Mutex};
 use tracing::{debug, info, instrument, warn};
 
 use super::{
-    cache::StatusCache, find_git_root, BranchInfo, CommitInfo, FileStatus, GitStatusFlags,
+    cache::StatusCache, find_git_root, operations::GitOperations, BranchInfo, CommitInfo, FileStatus, GitStatusFlags,
     RemoteInfo, StashInfo, TagInfo,
 };
 use crate::{
@@ -107,10 +107,113 @@ impl GitService {
     pub async fn get_status(&self) -> AppResult<Vec<FileStatus>> {
         let status_start = Instant::now();
 
-        // If this is a mock service, return empty status
+        // If this is a mock service, return comprehensive mock status data
         if self.is_mock {
             info!("Getting Git repository status (mock mode)");
-            return Ok(vec![]);
+            return Ok(vec![
+                // Staged files
+                FileStatus {
+                    path: "src/ui/components/sidebar.rs".to_string(),
+                    status: GitStatusFlags {
+                        index_modified: true,
+                        wt_modified: false,
+                        ..Default::default()
+                    },
+                    size: 15420,
+                    modified: Utc::now() - chrono::Duration::minutes(15),
+                    is_binary: false,
+                },
+                FileStatus {
+                    path: "src/git/service.rs".to_string(),
+                    status: GitStatusFlags {
+                        index_new: true,
+                        wt_modified: false,
+                        ..Default::default()
+                    },
+                    size: 8736,
+                    modified: Utc::now() - chrono::Duration::minutes(30),
+                    is_binary: false,
+                },
+                // Modified files
+                FileStatus {
+                    path: "README.md".to_string(),
+                    status: GitStatusFlags {
+                        wt_modified: true,
+                        index_modified: false,
+                        ..Default::default()
+                    },
+                    size: 2483,
+                    modified: Utc::now() - chrono::Duration::minutes(5),
+                    is_binary: false,
+                },
+                FileStatus {
+                    path: "Cargo.toml".to_string(),
+                    status: GitStatusFlags {
+                        wt_modified: true,
+                        index_modified: false,
+                        ..Default::default()
+                    },
+                    size: 1247,
+                    modified: Utc::now() - chrono::Duration::minutes(45),
+                    is_binary: false,
+                },
+                // Untracked files
+                FileStatus {
+                    path: "temp/debug_logs.txt".to_string(),
+                    status: GitStatusFlags {
+                        wt_new: true,
+                        ..Default::default()
+                    },
+                    size: 892,
+                    modified: Utc::now() - chrono::Duration::minutes(3),
+                    is_binary: false,
+                },
+                FileStatus {
+                    path: "docs/CHANGELOG.md".to_string(),
+                    status: GitStatusFlags {
+                        wt_new: true,
+                        ..Default::default()
+                    },
+                    size: 1456,
+                    modified: Utc::now() - chrono::Duration::minutes(10),
+                    is_binary: false,
+                },
+                // Deleted files
+                FileStatus {
+                    path: "old_file.rs".to_string(),
+                    status: GitStatusFlags {
+                        wt_deleted: true,
+                        ..Default::default()
+                    },
+                    size: 0,
+                    modified: Utc::now() - chrono::Duration::hours(2),
+                    is_binary: false,
+                },
+                // Conflicted file
+                FileStatus {
+                    path: "src/main.rs".to_string(),
+                    status: GitStatusFlags {
+                        conflicted: true,
+                        wt_modified: true,
+                        index_modified: true,
+                        ..Default::default()
+                    },
+                    size: 3247,
+                    modified: Utc::now() - chrono::Duration::minutes(20),
+                    is_binary: false,
+                },
+                // Binary file
+                FileStatus {
+                    path: "assets/logo.png".to_string(),
+                    status: GitStatusFlags {
+                        wt_new: true,
+                        ..Default::default()
+                    },
+                    size: 45621,
+                    modified: Utc::now() - chrono::Duration::minutes(60),
+                    is_binary: true,
+                },
+            ]);
         }
 
         info!("Getting Git repository status");
@@ -397,34 +500,160 @@ impl GitService {
     /// Get all branches
     #[instrument(skip(self))]
     pub fn list_branches(&self) -> AppResult<Vec<BranchInfo>> {
-        // Simplified implementation - always return mock data for now
-        // In a real implementation, this would access the repository
-        Ok(vec![
-            BranchInfo {
-                name: "main".to_string(),
-                is_current: true,
-                is_remote: false,
-                upstream: None,
-                ahead: 0,
-                behind: 0,
-                last_commit: "mock_commit_1".to_string(),
-                last_commit_message: "Initial commit".to_string(),
-                last_commit_author: "Mock Author".to_string(),
-                last_commit_date: Utc::now(),
-            },
-            BranchInfo {
-                name: "feature-branch".to_string(),
-                is_current: false,
-                is_remote: false,
-                upstream: None,
-                ahead: 2,
-                behind: 0,
-                last_commit: "mock_commit_2".to_string(),
-                last_commit_message: "Feature implementation".to_string(),
-                last_commit_author: "Mock Author".to_string(),
-                last_commit_date: Utc::now(),
-            },
-        ])
+        if self.is_mock {
+            // Return mock data for testing - comprehensive branch list with different types
+            return Ok(vec![
+                // Current local branch
+                BranchInfo {
+                    name: "develop".to_string(),
+                    is_current: true,
+                    is_remote: false,
+                    upstream: Some("origin/develop".to_string()),
+                    ahead: 2,
+                    behind: 1,
+                    last_commit: "dev1234".to_string(),
+                    last_commit_message: "Current development work".to_string(),
+                    last_commit_author: "Developer".to_string(),
+                    last_commit_date: Utc::now(),
+                },
+                // Other local branches
+                BranchInfo {
+                    name: "main".to_string(),
+                    is_current: false,
+                    is_remote: false,
+                    upstream: Some("origin/main".to_string()),
+                    ahead: 0,
+                    behind: 0,
+                    last_commit: "main123".to_string(),
+                    last_commit_message: "Stable main branch".to_string(),
+                    last_commit_author: "Main Developer".to_string(),
+                    last_commit_date: Utc::now() - chrono::Duration::hours(2),
+                },
+                BranchInfo {
+                    name: "feature/ui-improvements".to_string(),
+                    is_current: false,
+                    is_remote: false,
+                    upstream: Some("origin/feature/ui-improvements".to_string()),
+                    ahead: 3,
+                    behind: 0,
+                    last_commit: "feat456".to_string(),
+                    last_commit_message: "Add branch management UI".to_string(),
+                    last_commit_author: "Feature Developer".to_string(),
+                    last_commit_date: Utc::now() - chrono::Duration::hours(1),
+                },
+                BranchInfo {
+                    name: "hotfix/critical-bug".to_string(),
+                    is_current: false,
+                    is_remote: false,
+                    upstream: None, // No upstream - local only
+                    ahead: 0,
+                    behind: 0,
+                    last_commit: "fix789".to_string(),
+                    last_commit_message: "Fix critical issue".to_string(),
+                    last_commit_author: "Hotfix Developer".to_string(),
+                    last_commit_date: Utc::now() - chrono::Duration::minutes(30),
+                },
+                // Remote branches
+                BranchInfo {
+                    name: "origin/main".to_string(),
+                    is_current: false,
+                    is_remote: true,
+                    upstream: None,
+                    ahead: 0,
+                    behind: 0,
+                    last_commit: "main123".to_string(),
+                    last_commit_message: "Stable main branch".to_string(),
+                    last_commit_author: "Main Developer".to_string(),
+                    last_commit_date: Utc::now() - chrono::Duration::hours(2),
+                },
+                BranchInfo {
+                    name: "origin/develop".to_string(),
+                    is_current: false,
+                    is_remote: true,
+                    upstream: None,
+                    ahead: 0,
+                    behind: 0,
+                    last_commit: "dev5678".to_string(),
+                    last_commit_message: "Remote development branch".to_string(),
+                    last_commit_author: "Remote Developer".to_string(),
+                    last_commit_date: Utc::now() - chrono::Duration::hours(3),
+                },
+                BranchInfo {
+                    name: "origin/release/v2.1".to_string(),
+                    is_current: false,
+                    is_remote: true,
+                    upstream: None,
+                    ahead: 0,
+                    behind: 0,
+                    last_commit: "rel210".to_string(),
+                    last_commit_message: "Prepare release v2.1".to_string(),
+                    last_commit_author: "Release Manager".to_string(),
+                    last_commit_date: Utc::now() - chrono::Duration::days(1),
+                },
+            ]);
+        }
+
+        // Use real Git operations
+        tokio::task::block_in_place(|| {
+            let mut repo_guard = self.repo.blocking_lock();
+            let operations = GitOperations::new(&mut *repo_guard);
+            operations.list_branches()
+        })
+    }
+
+    /// Get file history for a specific file
+    #[instrument(skip(self))]
+    pub async fn get_file_history(&self, file_path: &str, limit: Option<usize>) -> AppResult<Vec<CommitInfo>> {
+        let limit = limit.unwrap_or(10);
+
+        if self.is_mock {
+            return Ok(vec![
+                CommitInfo {
+                    hash: "mock_file_commit_1".to_string(),
+                    short_hash: "moc123".to_string(),
+                    message: format!("Modified {}", file_path),
+                    author: "Mock Author".to_string(),
+                    author_email: "mock@example.com".to_string(),
+                    date: Utc::now(),
+                    parents: vec![],
+                },
+            ]);
+        }
+
+        let repo = self.repo.lock().await;
+        let mut revwalk = repo.revwalk().map_err(AppError::Git)?;
+        revwalk.push_head().map_err(AppError::Git)?;
+        revwalk.set_sorting(git2::Sort::TIME).map_err(AppError::Git)?;
+
+        let mut commits = Vec::new();
+        let mut count = 0;
+
+        for oid_result in revwalk {
+            if count >= limit {
+                break;
+            }
+
+            let oid = oid_result.map_err(AppError::Git)?;
+            let commit = repo.find_commit(oid).map_err(AppError::Git)?;
+
+            // Check if this commit affects the specified file
+            let tree = commit.tree().map_err(AppError::Git)?;
+            if tree.get_path(std::path::Path::new(file_path)).is_ok() {
+                let commit_info = CommitInfo {
+                    hash: commit.id().to_string(),
+                    short_hash: format!("{:.7}", commit.id()),
+                    message: commit.message().unwrap_or("").to_string(),
+                    author: commit.author().name().unwrap_or("").to_string(),
+                    author_email: commit.author().email().unwrap_or("").to_string(),
+                    date: DateTime::from_timestamp(commit.time().seconds(), 0).unwrap_or_else(|| Utc::now()),
+                    parents: commit.parent_ids().map(|id| id.to_string()).collect(),
+                };
+                commits.push(commit_info);
+                count += 1;
+            }
+        }
+
+        Ok(commits)
     }
 
     /// Get commit history
@@ -528,7 +757,17 @@ impl GitService {
             return Ok(());
         }
 
-        debug!("Mock switch_branch operation to {}", name);
+        debug!("Switching to branch: {}", name);
+
+        // Lock repository for mutable access
+        let mut repo = self.repo.lock().await;
+        let operations = GitOperations::new(&mut *repo);
+        operations.switch_branch(name)?;
+
+        // Clear cache after branch switch
+        self.status_cache.write().await.invalidate();
+
+        info!("Successfully switched to branch: {}", name);
         Ok(())
     }
 
@@ -584,19 +823,70 @@ impl GitService {
     pub async fn list_tags(&self) -> AppResult<Vec<TagInfo>> {
         if self.is_mock {
             return Ok(vec![
+                // Latest tags first
                 TagInfo {
-                    name: "v1.0.0".to_string(),
-                    target_commit: "mock_commit_1".to_string(),
-                    message: Some("Release version 1.0.0".to_string()),
-                    tagger: Some("Mock Tagger <mock@example.com>".to_string()),
-                    date: Utc::now(),
+                    name: "v2.1.0".to_string(),
+                    target_commit: "a1b2c3d4e5f67890".to_string(),
+                    message: Some("Release v2.1.0 - New TUI features and performance improvements".to_string()),
+                    tagger: Some("Release Manager <release@example.com>".to_string()),
+                    date: Utc::now() - chrono::Duration::days(7),
                 },
                 TagInfo {
-                    name: "v0.9.0".to_string(),
-                    target_commit: "mock_commit_2".to_string(),
-                    message: None,
+                    name: "v2.0.1".to_string(),
+                    target_commit: "b2c3d4e5f6781901".to_string(),
+                    message: Some("Hotfix v2.0.1 - Critical bug fixes".to_string()),
+                    tagger: Some("Hotfix Team <hotfix@example.com>".to_string()),
+                    date: Utc::now() - chrono::Duration::days(14),
+                },
+                TagInfo {
+                    name: "v2.0.0".to_string(),
+                    target_commit: "c3d4e5f678901234".to_string(),
+                    message: Some("Major release v2.0.0 - Complete UI rewrite with ratatui".to_string()),
+                    tagger: Some("Release Manager <release@example.com>".to_string()),
+                    date: Utc::now() - chrono::Duration::days(30),
+                },
+                TagInfo {
+                    name: "v1.9.2".to_string(),
+                    target_commit: "d4e5f67890123456".to_string(),
+                    message: Some("Bug fix release v1.9.2".to_string()),
+                    tagger: Some("Dev Team <dev@example.com>".to_string()),
+                    date: Utc::now() - chrono::Duration::days(45),
+                },
+                TagInfo {
+                    name: "v1.9.1".to_string(),
+                    target_commit: "e5f678901234567a".to_string(),
+                    message: None, // Lightweight tag
                     tagger: None,
-                    date: Utc::now(),
+                    date: Utc::now() - chrono::Duration::days(60),
+                },
+                TagInfo {
+                    name: "v1.9.0".to_string(),
+                    target_commit: "f67890123456789b".to_string(),
+                    message: Some("Feature release v1.9.0 - Git workflow enhancements".to_string()),
+                    tagger: Some("Dev Team <dev@example.com>".to_string()),
+                    date: Utc::now() - chrono::Duration::days(90),
+                },
+                TagInfo {
+                    name: "v1.8.0".to_string(),
+                    target_commit: "7890123456789abc".to_string(),
+                    message: Some("Release v1.8.0 - Agent system improvements".to_string()),
+                    tagger: Some("Release Manager <release@example.com>".to_string()),
+                    date: Utc::now() - chrono::Duration::days(120),
+                },
+                // Beta and alpha tags
+                TagInfo {
+                    name: "v2.2.0-beta.1".to_string(),
+                    target_commit: "890123456789abcd".to_string(),
+                    message: Some("Beta release v2.2.0-beta.1 - Testing new features".to_string()),
+                    tagger: Some("Beta Team <beta@example.com>".to_string()),
+                    date: Utc::now() - chrono::Duration::days(2),
+                },
+                TagInfo {
+                    name: "v2.1.1-alpha.2".to_string(),
+                    target_commit: "90123456789abcde".to_string(),
+                    message: None, // Lightweight alpha tag
+                    tagger: None,
+                    date: Utc::now() - chrono::Duration::days(5),
                 },
             ]);
         }
@@ -628,10 +918,46 @@ impl GitService {
     pub async fn list_stash(&self) -> AppResult<Vec<StashInfo>> {
         if self.is_mock {
             return Ok(vec![
+                // Most recent stash (index 0)
                 StashInfo {
                     index: 0,
-                    message: "WIP on main: implementing feature".to_string(),
-                    date: Utc::now(),
+                    message: "WIP on feature/ui-improvements: Adding new components".to_string(),
+                    date: Utc::now() - chrono::Duration::minutes(30),
+                    branch: "feature/ui-improvements".to_string(),
+                },
+                // Second most recent stash (index 1)
+                StashInfo {
+                    index: 1,
+                    message: "WIP on develop: Experimental changes before merge".to_string(),
+                    date: Utc::now() - chrono::Duration::hours(2),
+                    branch: "develop".to_string(),
+                },
+                // Older stash (index 2)
+                StashInfo {
+                    index: 2,
+                    message: "WIP on main: Backup before major refactor".to_string(),
+                    date: Utc::now() - chrono::Duration::hours(6),
+                    branch: "main".to_string(),
+                },
+                // Even older stash (index 3)
+                StashInfo {
+                    index: 3,
+                    message: "WIP on hotfix/critical-bug: Emergency fix attempt".to_string(),
+                    date: Utc::now() - chrono::Duration::days(1),
+                    branch: "hotfix/critical-bug".to_string(),
+                },
+                // Old stash (index 4)
+                StashInfo {
+                    index: 4,
+                    message: "WIP on feature/new-api: API design changes".to_string(),
+                    date: Utc::now() - chrono::Duration::days(3),
+                    branch: "feature/new-api".to_string(),
+                },
+                // Very old stash (index 5)
+                StashInfo {
+                    index: 5,
+                    message: "WIP on main: Config updates before deployment".to_string(),
+                    date: Utc::now() - chrono::Duration::days(7),
                     branch: "main".to_string(),
                 },
             ]);
@@ -700,6 +1026,22 @@ impl GitService {
 
         // Simple binary detection: check for null bytes in first 512 bytes
         Ok(buffer[..bytes_read].contains(&0))
+    }
+
+    /// Get access to the underlying Git repository
+    pub fn get_repository(&self) -> AppResult<Repository> {
+        if self.is_mock {
+            return Err(AppError::InvalidState("Cannot access repository in mock mode".to_string()));
+        }
+
+        // Clone the repository handle for safe access
+        // Note: This is a simplified approach - in production, we'd want more sophisticated locking
+        let repo_guard = tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(self.repo.lock())
+        });
+
+        // We need to open a new repository handle since git2::Repository doesn't implement Clone
+        Repository::open(&self.repo_path).map_err(AppError::Git)
     }
 
     /// Create a mock service for non-Git directories

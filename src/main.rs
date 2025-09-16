@@ -1,15 +1,29 @@
 use ai_c::{initialize_logging, App, config::Config, error::AppResult, git::GitService};
-use std::{env, time::{Duration, Instant}};
+use std::{env, process, time::{Duration, Instant}};
 use tracing::{info, warn, debug};
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    // Initialize logging first
+    // Parse command line arguments first (before logging to avoid noise)
+    let args: Vec<String> = env::args().collect();
+
+    // Handle version flag
+    if args.contains(&"--version".to_string()) || args.contains(&"-V".to_string()) {
+        println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+        process::exit(0);
+    }
+
+    // Handle help flag
+    if args.contains(&"--help".to_string()) || args.contains(&"-h".to_string()) {
+        print_help();
+        process::exit(0);
+    }
+
+    // Initialize logging
     initialize_logging().map_err(|e| ai_c::error::AppError::application(&e.to_string()))?;
     let start_time = Instant::now();
 
     // Check if we should run in demo mode or TUI mode
-    let args: Vec<String> = env::args().collect();
     let demo_mode = args.contains(&"--demo".to_string()) ||
                    env::var("AI_C_DEMO_MODE").is_ok() ||
                    env::var("TERM").unwrap_or_default().is_empty();
@@ -87,6 +101,28 @@ async fn run_demo_mode(start_time: Instant) -> AppResult<()> {
 
     info!("👋 AI-C TUI Demo finished.");
     Ok(())
+}
+
+fn print_help() {
+    println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    println!("{}", env!("CARGO_PKG_DESCRIPTION"));
+    println!();
+    println!("USAGE:");
+    println!("    {} [OPTIONS]", env!("CARGO_PKG_NAME"));
+    println!();
+    println!("OPTIONS:");
+    println!("    -h, --help       Print this help message and exit");
+    println!("    -V, --version    Print version information and exit");
+    println!("        --demo       Run in demo mode (non-interactive)");
+    println!();
+    println!("ENVIRONMENT:");
+    println!("    AI_C_DEMO_MODE   Set to run in demo mode");
+    println!("    RUST_LOG         Set logging level (debug, info, warn, error)");
+    println!();
+    println!("EXAMPLES:");
+    println!("    {}              Start interactive TUI mode", env!("CARGO_PKG_NAME"));
+    println!("    {} --demo       Run in demo mode", env!("CARGO_PKG_NAME"));
+    println!("    {} --version    Show version information", env!("CARGO_PKG_NAME"));
 }
 
 async fn run_full_tui_mode(start_time: Instant) -> AppResult<()> {

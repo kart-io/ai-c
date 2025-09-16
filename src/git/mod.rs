@@ -9,8 +9,14 @@
 pub mod cache;
 pub mod operations;
 pub mod service;
+pub mod workflow;
 
 pub use service::GitService;
+pub use workflow::{
+    GitWorkflowManager, BranchManager, TagManager, RemoteManager,
+    BranchInfo as WorkflowBranchInfo, TagInfo as WorkflowTagInfo, RemoteInfo as WorkflowRemoteInfo,
+    GitFlowConfig, BranchProtectionRule, MergeStrategy, BranchComparison
+};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

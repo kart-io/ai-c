@@ -5,7 +5,7 @@
 
 use chrono::{DateTime, Utc};
 use git2::{BranchType, ObjectType, Repository};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tracing::{debug, info, instrument, warn};
 
 use crate::{
@@ -453,5 +453,153 @@ impl<'repo> GitOperations<'repo> {
         debug!("Merged branch {} in {:?}", branch_name, duration);
 
         Ok(())
+    }
+
+    /// List all branches in the repository
+    pub fn list_branches(&self) -> AppResult<Vec<crate::git::BranchInfo>> {
+        let operation_start = Instant::now();
+
+        info!("Listing branches");
+        let mut branches = Vec::new();
+
+        // Get current HEAD to determine which branch is current
+        let head_ref = self.repo.head().ok();
+        let current_branch_name = if let Some(ref head_ref) = head_ref {
+            if head_ref.is_branch() {
+                head_ref.shorthand().map(|s| s.to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        // Iterate through all branches (both local and remote)
+        let branch_types = vec![git2::BranchType::Local, git2::BranchType::Remote];
+
+        for branch_type in branch_types {
+            let branch_iter = match self.repo.branches(Some(branch_type)) {
+                Ok(iter) => iter,
+                Err(e) => {
+                    warn!("Failed to list {:?} branches: {}", branch_type, e);
+                    continue;
+                }
+            };
+
+            for branch_result in branch_iter {
+                let (branch, current_branch_type) = match branch_result {
+                    Ok(result) => result,
+                    Err(e) => {
+                        warn!("Failed to get branch info: {}", e);
+                        continue;
+                    }
+                };
+
+                let branch_name = match branch.name() {
+                    Ok(Some(name)) => name,
+                    Ok(None) => {
+                        warn!("Branch has no name");
+                        continue;
+                    }
+                    Err(e) => {
+                        warn!("Failed to get branch name: {}", e);
+                        continue;
+                    }
+                };
+
+                let is_remote = current_branch_type == git2::BranchType::Remote;
+                let is_current = if is_remote {
+                    false  // Remote branches are never "current"
+                } else {
+                    current_branch_name.as_ref().map_or(false, |current| current == branch_name)
+                };
+
+                // Get branch reference and commit info
+                let branch_ref = branch.get();
+                let commit = match branch_ref.peel_to_commit() {
+                    Ok(commit) => commit,
+                    Err(e) => {
+                        warn!("Failed to get commit for branch {}: {}", branch_name, e);
+                        continue;
+                    }
+                };
+
+                let last_commit = commit.id().to_string();
+                let last_commit_message = commit.message().unwrap_or("").lines().next().unwrap_or("").to_string();
+                let author = commit.author();
+                let last_commit_author = format!("{} <{}>",
+                    author.name().unwrap_or("Unknown"),
+                    author.email().unwrap_or("unknown@example.com")
+                );
+                let last_commit_date = chrono::DateTime::from_timestamp(commit.time().seconds(), 0)
+                    .unwrap_or_else(chrono::Utc::now);
+
+                // Get upstream information for local branches
+                let upstream = if !is_remote {
+                    branch.upstream().ok().and_then(|upstream_branch| {
+                        upstream_branch.name().ok().flatten().map(|s| s.to_string())
+                    })
+                } else {
+                    None
+                };
+
+                // Calculate ahead/behind counts (simplified for now)
+                let (ahead, behind) = if !is_remote && upstream.is_some() {
+                    // TODO: Implement proper ahead/behind calculation
+                    (0, 0)
+                } else {
+                    (0, 0)
+                };
+
+                branches.push(crate::git::BranchInfo {
+                    name: branch_name.to_string(),
+                    is_current,
+                    is_remote,
+                    upstream,
+                    ahead,
+                    behind,
+                    last_commit: if last_commit.len() >= 8 { last_commit[..8].to_string() } else { last_commit },
+                    last_commit_message,
+                    last_commit_author,
+                    last_commit_date,
+                });
+            }
+        }
+
+        // Sort branches: current first, then local branches, then remote branches
+        branches.sort_by(|a, b| {
+            use std::cmp::Ordering;
+
+            // Current branch always first
+            if a.is_current && !b.is_current {
+                return Ordering::Less;
+            } else if !a.is_current && b.is_current {
+                return Ordering::Greater;
+            }
+
+            // Then local branches before remote branches
+            if !a.is_remote && b.is_remote {
+                return Ordering::Less;
+            } else if a.is_remote && !b.is_remote {
+                return Ordering::Greater;
+            }
+
+            // Finally, sort by name within the same category
+            a.name.cmp(&b.name)
+        });
+
+        let local_count = branches.iter().filter(|b| !b.is_remote).count();
+        let remote_count = branches.iter().filter(|b| b.is_remote).count();
+        let duration = operation_start.elapsed();
+
+        info!(
+            "Listed {} branches ({} local, {} remote) in {:?}",
+            branches.len(),
+            local_count,
+            remote_count,
+            duration
+        );
+
+        Ok(branches)
     }
 }

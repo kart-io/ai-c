@@ -9,21 +9,72 @@
 
 pub mod agent;
 pub mod agents;
+pub mod client;
+// pub mod collaboration; // Temporarily disabled due to compilation errors
+pub mod config_manager;
 pub mod health;
+// pub mod hot_swap; // Temporarily disabled due to compilation errors
+// pub mod load_balancer; // Temporarily disabled due to compilation errors
 pub mod manager;
 pub mod message_bus;
+pub mod metrics_collector;
+pub mod prompt_manager;
+pub mod recovery;
 pub mod scheduler;
+// pub mod suggestion_cache; // Temporarily disabled due to compilation errors
+// pub mod timeout_retry; // Temporarily disabled due to compilation errors
 
-pub use agent::{Agent, AgentCapability, AgentResult, AgentTask, HealthStatus};
-pub use health::HealthMonitor;
-pub use manager::AgentManager;
-pub use message_bus::{AgentMessage, MessageBus};
-pub use scheduler::{SchedulingStrategy, TaskScheduler};
+pub use agent::{
+    Agent, AgentCapability, AgentConfig, AgentError, AgentMessage, AgentResult,
+    AgentStatus, AgentTask, HealthStatus, MessageType
+};
+pub use client::{AIClient, AIClientConfig, AIProvider, AIRequest, AIResponse, HttpAIClient};
+// pub use collaboration::{
+//     CollaborationOrchestrator, CollaborationRequest, CollaborationResult, CollaborationTaskType,
+//     CollaborativeAgent, AgentContribution, QualityRequirements, QualityMetrics
+// };
+// pub use suggestion_cache::{SuggestionCache, SuggestionCacheConfig, CacheStats};
+// pub use load_balancer::{
+//     LoadBalancer, LoadBalancingStrategy, TaskRequirements, AgentLoad, ResourceRequirements,
+//     RoundRobinStrategy, LeastLoadedStrategy, CapabilityBasedStrategy
+// };
+// pub use timeout_retry::{
+//     TimeoutRetryExecutor, RetryConfig, RetryableOperation, RetryResult, RetryableError
+// };
+// pub use hot_swap::{
+//     HotSwapManager, HotSwapConfig, HotSwapRequest, HotSwapResult, HotSwapOperation,
+//     HotSwappableAgent, AgentCreator, AgentFactory, MigrationStrategy, SwapPriority
+// };
+pub use config_manager::{
+    ConfigManager, ConfigStore, FileConfigStore, ConfigError, ConfigValidator, BasicConfigValidator
+};
+pub use health::{
+    HealthMonitor, HealthMonitorConfig, MonitorError, MonitoredAgent, HealthReport,
+    HealthCheck, ResponseTimeCheck, MemoryUsageCheck, AlertingService, LoggingAlertingService,
+    HealthMonitorStatistics
+};
+pub use manager::{AgentManager, AgentManagerConfig, SystemStatus};
+pub use metrics_collector::{
+    MetricsCollector, MetricsRegistry, Metric, MetricsError, SystemMetrics,
+    MetricsExporter, PrometheusExporter, JsonFileExporter, MetricsConfig
+};
+pub use message_bus::MessageBus;
+pub use prompt_manager::{PromptManager, PromptManagerConfig, PromptTemplate, PromptCategory};
+pub use recovery::{
+    FailureRecoveryManager, FailureRecoveryConfig, CircuitBreakerConfig, FailureDetectionConfig,
+    FailureType, FailureInfo, FailureSeverity, RecoveryError, CircuitBreakerState, CircuitBreaker,
+    RecoveryStrategy, RestartRecoveryStrategy, DegradedModeRecoveryStrategy, FailoverRecoveryStrategy,
+    FailureDetector, RecoveryStatistics
+};
+pub use scheduler::{
+    SchedulingStrategy, TaskScheduler, TaskSchedulerConfig, TaskStatus, RunningTask,
+    AgentAvailability, PriorityBasedStrategy, CapabilityMatchStrategy,
+    SchedulerStatistics
+};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use uuid::Uuid;
 
 /// Agent task priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
