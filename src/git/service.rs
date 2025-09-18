@@ -487,6 +487,7 @@ impl GitService {
             name: "main".to_string(),
             is_current: true,
             is_remote: false,
+            is_local: true,
             upstream: None,
             ahead: 0,
             behind: 0,
@@ -508,6 +509,7 @@ impl GitService {
                     name: "develop".to_string(),
                     is_current: true,
                     is_remote: false,
+                    is_local: true,
                     upstream: Some("origin/develop".to_string()),
                     ahead: 2,
                     behind: 1,
@@ -521,6 +523,7 @@ impl GitService {
                     name: "main".to_string(),
                     is_current: false,
                     is_remote: false,
+                    is_local: true,
                     upstream: Some("origin/main".to_string()),
                     ahead: 0,
                     behind: 0,
@@ -533,6 +536,7 @@ impl GitService {
                     name: "feature/ui-improvements".to_string(),
                     is_current: false,
                     is_remote: false,
+                    is_local: true,
                     upstream: Some("origin/feature/ui-improvements".to_string()),
                     ahead: 3,
                     behind: 0,
@@ -544,6 +548,7 @@ impl GitService {
                 BranchInfo {
                     name: "hotfix/critical-bug".to_string(),
                     is_current: false,
+                    is_local: true,
                     is_remote: false,
                     upstream: None, // No upstream - local only
                     ahead: 0,
@@ -558,6 +563,7 @@ impl GitService {
                     name: "origin/main".to_string(),
                     is_current: false,
                     is_remote: true,
+                    is_local: false,
                     upstream: None,
                     ahead: 0,
                     behind: 0,
@@ -570,6 +576,7 @@ impl GitService {
                     name: "origin/develop".to_string(),
                     is_current: false,
                     is_remote: true,
+                    is_local: false,
                     upstream: None,
                     ahead: 0,
                     behind: 0,
@@ -582,6 +589,7 @@ impl GitService {
                     name: "origin/release/v2.1".to_string(),
                     is_current: false,
                     is_remote: true,
+                    is_local: false,
                     upstream: None,
                     ahead: 0,
                     behind: 0,
@@ -724,6 +732,7 @@ impl GitService {
                 name: name.to_string(),
                 is_current: false,
                 is_remote: false,
+                is_local: true,
                 upstream: None,
                 ahead: 0,
                 behind: 0,
@@ -739,6 +748,7 @@ impl GitService {
             name: name.to_string(),
             is_current: false,
             is_remote: false,
+            is_local: true,
             upstream: None,
             ahead: 0,
             behind: 0,
@@ -789,6 +799,7 @@ impl GitService {
         if self.is_mock {
             return Ok(TagInfo {
                 name: name.to_string(),
+                target: "mock_commit_id".to_string(),
                 target_commit: "mock_commit_id".to_string(),
                 message: message.map(String::from),
                 tagger: Some("Mock Tagger <mock@example.com>".to_string()),
@@ -799,6 +810,7 @@ impl GitService {
         debug!("Mock create_tag operation for {}", name);
         Ok(TagInfo {
             name: name.to_string(),
+            target: "tag_commit_id".to_string(),
             target_commit: "tag_commit_id".to_string(),
             message: message.map(String::from),
             tagger: Some("Git User <user@example.com>".to_string()),
@@ -826,6 +838,7 @@ impl GitService {
                 // Latest tags first
                 TagInfo {
                     name: "v2.1.0".to_string(),
+                    target: "a1b2c3d4e5f67890".to_string(),
                     target_commit: "a1b2c3d4e5f67890".to_string(),
                     message: Some("Release v2.1.0 - New TUI features and performance improvements".to_string()),
                     tagger: Some("Release Manager <release@example.com>".to_string()),
@@ -833,6 +846,7 @@ impl GitService {
                 },
                 TagInfo {
                     name: "v2.0.1".to_string(),
+                    target: "b2c3d4e5f6781901".to_string(),
                     target_commit: "b2c3d4e5f6781901".to_string(),
                     message: Some("Hotfix v2.0.1 - Critical bug fixes".to_string()),
                     tagger: Some("Hotfix Team <hotfix@example.com>".to_string()),
@@ -840,6 +854,7 @@ impl GitService {
                 },
                 TagInfo {
                     name: "v2.0.0".to_string(),
+                    target: "c3d4e5f678901234".to_string(),
                     target_commit: "c3d4e5f678901234".to_string(),
                     message: Some("Major release v2.0.0 - Complete UI rewrite with ratatui".to_string()),
                     tagger: Some("Release Manager <release@example.com>".to_string()),
@@ -847,6 +862,7 @@ impl GitService {
                 },
                 TagInfo {
                     name: "v1.9.2".to_string(),
+                    target: "d4e5f67890123456".to_string(),
                     target_commit: "d4e5f67890123456".to_string(),
                     message: Some("Bug fix release v1.9.2".to_string()),
                     tagger: Some("Dev Team <dev@example.com>".to_string()),
@@ -854,6 +870,7 @@ impl GitService {
                 },
                 TagInfo {
                     name: "v1.9.1".to_string(),
+                    target: "e5f678901234567a".to_string(),
                     target_commit: "e5f678901234567a".to_string(),
                     message: None, // Lightweight tag
                     tagger: None,
@@ -861,6 +878,7 @@ impl GitService {
                 },
                 TagInfo {
                     name: "v1.9.0".to_string(),
+                    target: "f67890123456789b".to_string(),
                     target_commit: "f67890123456789b".to_string(),
                     message: Some("Feature release v1.9.0 - Git workflow enhancements".to_string()),
                     tagger: Some("Dev Team <dev@example.com>".to_string()),
@@ -868,6 +886,7 @@ impl GitService {
                 },
                 TagInfo {
                     name: "v1.8.0".to_string(),
+                    target: "7890123456789abc".to_string(),
                     target_commit: "7890123456789abc".to_string(),
                     message: Some("Release v1.8.0 - Agent system improvements".to_string()),
                     tagger: Some("Release Manager <release@example.com>".to_string()),
@@ -876,6 +895,7 @@ impl GitService {
                 // Beta and alpha tags
                 TagInfo {
                     name: "v2.2.0-beta.1".to_string(),
+                    target: "890123456789abcd".to_string(),
                     target_commit: "890123456789abcd".to_string(),
                     message: Some("Beta release v2.2.0-beta.1 - Testing new features".to_string()),
                     tagger: Some("Beta Team <beta@example.com>".to_string()),
@@ -883,6 +903,7 @@ impl GitService {
                 },
                 TagInfo {
                     name: "v2.1.1-alpha.2".to_string(),
+                    target: "90123456789abcde".to_string(),
                     target_commit: "90123456789abcde".to_string(),
                     message: None, // Lightweight alpha tag
                     tagger: None,
@@ -902,6 +923,7 @@ impl GitService {
             return Ok(vec![
                 RemoteInfo {
                     name: "origin".to_string(),
+                    url: "https://github.com/mock/repo.git".to_string(),
                     fetch_url: "https://github.com/mock/repo.git".to_string(),
                     push_url: "https://github.com/mock/repo.git".to_string(),
                     is_connected: true,
@@ -1062,6 +1084,162 @@ impl GitService {
             is_mock: true,
         }
     }
+
+    /// Get file content at HEAD commit
+    #[instrument(skip(self, file_path))]
+    pub fn get_file_content_at_head<P: AsRef<std::path::Path>>(&self, file_path: P) -> AppResult<String> {
+        use git2::{ObjectType, TreeWalkMode};
+
+        let file_path = file_path.as_ref();
+        if self.is_mock {
+            // Return mock content for demo purposes
+            return Ok(format!(
+                "// Mock content for file: {}\n\
+                 // This is simulated original content\n\
+                 fn main() {{\n\
+                     println!(\"Hello from original version!\");\n\
+                 }}\n",
+                file_path.display()
+            ));
+        }
+
+        // For real Git repos, get the actual file content
+        let repo = self.repo.try_lock().map_err(|_| {
+            AppError::InvalidOperation("Git repository is busy".to_string())
+        })?;
+
+        // Get HEAD commit
+        let head = repo.head().map_err(AppError::Git)?;
+        let head_commit = head.peel_to_commit().map_err(AppError::Git)?;
+
+        // Get the tree from HEAD commit
+        let tree = head_commit.tree().map_err(AppError::Git)?;
+
+        // Convert absolute path to relative path from repo root
+        let relative_path = file_path.strip_prefix(&self.repo_path)
+            .map_err(|_| AppError::InvalidOperation(format!("File path {:?} is not within repository", file_path)))?;
+
+        // Find the file in the tree
+        let tree_entry = tree.get_path(&relative_path).map_err(|_| {
+            AppError::InvalidOperation(format!("File {:?} not found in HEAD commit", relative_path))
+        })?;
+
+        // Get the blob object
+        let blob = repo.find_blob(tree_entry.id()).map_err(AppError::Git)?;
+
+        // Convert blob content to string
+        let content = std::str::from_utf8(blob.content())
+            .map_err(|_| AppError::InvalidOperation("File contains non-UTF8 content".to_string()))?;
+
+        Ok(content.to_string())
+    }
+
+    /// Get diff between working directory and HEAD for a specific file
+    #[instrument(skip(self))]
+    pub async fn get_file_diff(&self, file_path: &PathBuf) -> AppResult<(String, String)> {
+        if self.is_mock {
+            let old_content = self.get_file_content_at_head(file_path)?;
+            let new_content = format!(
+                "// Mock content for file: {:?}\n\
+                 // This is simulated modified content\n\
+                 fn main() {{\n\
+                     println!(\"Hello from modified version!\");\n\
+                     println!(\"Added new functionality!\");\n\
+                 }}\n",
+                file_path
+            );
+            return Ok((old_content, new_content));
+        }
+
+        // Get content from HEAD
+        let old_content = self.get_file_content_at_head(file_path)?;
+
+        // Get current working directory content
+        let new_content = tokio::fs::read_to_string(file_path)
+            .await
+            .unwrap_or_else(|_| String::new());
+
+        Ok((old_content, new_content))
+    }
+
+    /// Get commits (alias for get_commit_history for UI compatibility)
+    pub async fn get_commits(&self, limit: usize) -> AppResult<Vec<CommitInfo>> {
+        self.get_commit_history(limit).await
+    }
+
+    /// Get branches (for UI compatibility)
+    pub async fn get_branches(&self) -> AppResult<Vec<BranchInfo>> {
+        if self.is_mock {
+            // Return mock branches
+            return Ok(vec![
+                BranchInfo {
+                    name: "main".to_string(),
+                    is_current: false,
+                    is_remote: false,
+                    is_local: true,
+                    upstream: None,
+                    ahead: 0,
+                    behind: 0,
+                    last_commit: "abc1234".to_string(),
+                    last_commit_message: "Main branch".to_string(),
+                    last_commit_author: "Developer".to_string(),
+                    last_commit_date: Utc::now(),
+                },
+                BranchInfo {
+                    name: "develop".to_string(),
+                    is_current: true,
+                    is_remote: false,
+                    is_local: true,
+                    upstream: Some("origin/develop".to_string()),
+                    ahead: 2,
+                    behind: 0,
+                    last_commit: "dev1234".to_string(),
+                    last_commit_message: "Development work".to_string(),
+                    last_commit_author: "Dev Team".to_string(),
+                    last_commit_date: Utc::now(),
+                }
+            ]);
+        }
+
+        // Real implementation for actual Git repositories
+        let repo = self.repo.lock().await;
+        let mut branches = Vec::new();
+
+        let branch_iter = repo.branches(None).map_err(AppError::Git)?;
+        for branch_result in branch_iter {
+            let (branch, _branch_type) = branch_result.map_err(AppError::Git)?;
+            if let Some(name) = branch.name().map_err(AppError::Git)? {
+                let is_current = branch.is_head();
+
+                branches.push(BranchInfo {
+                    name: name.to_string(),
+                    is_current,
+                    is_remote: false, // Simplified for now
+                    is_local: true,   // Assume local for now
+                    upstream: None,
+                    ahead: 0,
+                    behind: 0,
+                    last_commit: "unknown".to_string(),
+                    last_commit_message: "".to_string(),
+                    last_commit_author: "".to_string(),
+                    last_commit_date: Utc::now(),
+                });
+            }
+        }
+
+        Ok(branches)
+    }
+
+    /// Get tags (alias for list_tags for UI compatibility)
+    pub async fn get_tags(&self) -> AppResult<Vec<TagInfo>> {
+        self.list_tags().await
+    }
+
+    /// Get remotes (alias for list_remotes for UI compatibility)
+    pub async fn get_remotes(&self) -> AppResult<Vec<RemoteInfo>> {
+        self.list_remotes().await
+    }
+
 }
 
 /// Performance monitoring for Git operations

@@ -82,9 +82,10 @@ async fn run_demo_mode(start_time: Instant) -> AppResult<()> {
     info!("  • GitFlow Tab - GitFlow operations");
 
     info!("⌨️  Key Bindings:");
-    info!("  • Tab - Switch between tabs");
+    info!("  • Tab - Switch between main tabs");
+    info!("  • Space - Switch panels within tabs");
     info!("  • Arrow Keys / j,k - Navigate items");
-    info!("  • Space - Toggle selection");
+    info!("  • Enter - Toggle selection");
     info!("  • q / Esc - Quit application");
 
     // Simulate application running

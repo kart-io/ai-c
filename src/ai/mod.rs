@@ -28,6 +28,8 @@ pub use agent::{
     Agent, AgentCapability, AgentConfig, AgentError, AgentMessage, AgentResult,
     AgentStatus, AgentTask, HealthStatus, MessageType
 };
+
+// Export AgentType directly from this module
 pub use client::{AIClient, AIClientConfig, AIProvider, AIRequest, AIResponse, HttpAIClient};
 // pub use collaboration::{
 //     CollaborationOrchestrator, CollaborationRequest, CollaborationResult, CollaborationTaskType,
@@ -75,6 +77,40 @@ pub use scheduler::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+
+/// Agent types
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AgentType {
+    Commit,
+    Analysis,
+    Review,
+    Search,
+    Custom(String),
+}
+
+impl AgentType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            AgentType::Commit => "Commit",
+            AgentType::Analysis => "Analysis",
+            AgentType::Review => "Review",
+            AgentType::Search => "Search",
+            AgentType::Custom(name) => name,
+        }
+    }
+}
+
+impl From<String> for AgentType {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "Commit" => AgentType::Commit,
+            "Analysis" => AgentType::Analysis,
+            "Review" => AgentType::Review,
+            "Search" => AgentType::Search,
+            _ => AgentType::Custom(s),
+        }
+    }
+}
 
 /// Agent task priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

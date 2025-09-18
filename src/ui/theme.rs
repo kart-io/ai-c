@@ -176,6 +176,11 @@ impl Theme {
         Style::default().fg(self.colors.secondary)
     }
 
+    /// Get color for selection highlighting
+    pub fn selection_color(&self) -> Color {
+        self.colors.primary
+    }
+
     /// Get style for Git status indicators
     pub fn git_status_style(&self, status_char: char) -> Style {
         match status_char {
@@ -188,6 +193,11 @@ impl Theme {
                 .add_modifier(Modifier::BOLD), // Conflict
             _ => Style::default().fg(self.colors.foreground),
         }
+    }
+
+    /// Get style for accent borders (focused panels)
+    pub fn accent_border_style(&self) -> Style {
+        Style::default().fg(self.colors.accent)
     }
 }
 

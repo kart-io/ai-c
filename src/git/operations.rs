@@ -56,6 +56,7 @@ impl<'repo> GitOperations<'repo> {
             name: name.to_string(),
             is_current: false,
             is_remote: false,
+            is_local: true,
             upstream: None,
             ahead: 0,
             behind: 0,
@@ -173,6 +174,7 @@ impl<'repo> GitOperations<'repo> {
 
         let tag_info = TagInfo {
             name: name.to_string(),
+            target: target_commit.id().to_string(),
             target_commit: target_commit.id().to_string(),
             message: message.map(String::from),
             tagger: Some(
@@ -254,6 +256,7 @@ impl<'repo> GitOperations<'repo> {
 
                         let tag_info = TagInfo {
                             name: tag_name.to_string(),
+                            target: target_commit.clone(),
                             target_commit,
                             message,
                             tagger: tagger_info,
@@ -281,6 +284,7 @@ impl<'repo> GitOperations<'repo> {
                 if let Ok(remote) = self.repo.find_remote(name) {
                     let remote_info = RemoteInfo {
                         name: name.to_string(),
+                        url: remote.url().unwrap_or("").to_string(),
                         fetch_url: remote.url().unwrap_or("").to_string(),
                         push_url: remote.pushurl().or(remote.url()).unwrap_or("").to_string(),
                         is_connected: false, // TODO: Implement connection check
@@ -555,6 +559,7 @@ impl<'repo> GitOperations<'repo> {
                     name: branch_name.to_string(),
                     is_current,
                     is_remote,
+                    is_local: !is_remote,
                     upstream,
                     ahead,
                     behind,

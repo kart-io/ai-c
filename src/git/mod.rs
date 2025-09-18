@@ -142,6 +142,8 @@ pub struct BranchInfo {
     pub is_current: bool,
     /// Whether this is a remote branch
     pub is_remote: bool,
+    /// Whether this is a local branch (for UI compatibility)
+    pub is_local: bool,
     /// Remote tracking branch name
     pub upstream: Option<String>,
     /// Number of commits ahead of upstream
@@ -163,7 +165,9 @@ pub struct BranchInfo {
 pub struct TagInfo {
     /// Tag name
     pub name: String,
-    /// Target commit hash
+    /// Target commit hash (for UI compatibility)
+    pub target: String,
+    /// Target commit hash (alternative naming)
     pub target_commit: String,
     /// Tag message (for annotated tags)
     pub message: Option<String>,
@@ -178,6 +182,8 @@ pub struct TagInfo {
 pub struct RemoteInfo {
     /// Remote name
     pub name: String,
+    /// URL (for UI compatibility - same as fetch_url)
+    pub url: String,
     /// Fetch URL
     pub fetch_url: String,
     /// Push URL

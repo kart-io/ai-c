@@ -5,13 +5,15 @@
 
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
+use std::time::Duration;
 use uuid::Uuid;
 
 use crate::{
-    ai::AgentResult,
+    ai::{AgentResult, AgentStatus, AgentType},
     git::{BranchInfo, CommitInfo, FileStatus, GitService},
     ui::selection::SelectionManager,
 };
+
 
 /// Central application state
 ///
@@ -69,6 +71,7 @@ impl AppState {
             name: "develop".to_string(),
             is_current: true,
             is_remote: false,
+            is_local: true,
             upstream: None,
             ahead: 0,
             behind: 0,
@@ -331,14 +334,14 @@ pub struct UIState {
 impl Default for UIState {
     fn default() -> Self {
         Self {
-            current_tab: TabType::Status,
+            current_tab: TabType::Branches,
             tab_changed_at: Utc::now(),
             sidebar_width: 25,
             is_sidebar_visible: true,
             terminal_size: (80, 24),
             scroll_offset: 0,
             selected_item_index: 0,
-            current_focus: FocusArea::Sidebar,  // Start with sidebar focused
+            current_focus: FocusArea::MainContent,  // Start with main content focused
             sidebar_selected_index: 0,
             main_content_selected_index: 0,
             selection_manager: SelectionManager::new(),
@@ -354,6 +357,7 @@ pub enum TabType {
     Stash,
     Status,
     Remotes,
+    History,
     GitFlow,
 }
 
@@ -366,6 +370,7 @@ impl TabType {
             TabType::Stash,
             TabType::Status,
             TabType::Remotes,
+            TabType::History,
             TabType::GitFlow,
         ]
     }
@@ -378,6 +383,7 @@ impl TabType {
             TabType::Stash => "Stash",
             TabType::Status => "Status",
             TabType::Remotes => "Remotes",
+            TabType::History => "History",
             TabType::GitFlow => "Git工作流",
         }
     }
@@ -389,6 +395,10 @@ pub struct AgentState {
     pub active_agents: Vec<String>,
     pub task_results: HashMap<Uuid, AgentResult>,
     pub last_agent_activity: DateTime<Utc>,
+    /// Agents for UI display - maps agent ID to agent info
+    pub agents: HashMap<String, UIAgentInfo>,
+    /// AI suggestions list
+    pub ai_suggestions: Vec<AISuggestion>,
 }
 
 impl Default for AgentState {
@@ -397,6 +407,8 @@ impl Default for AgentState {
             active_agents: Vec::new(),
             task_results: HashMap::new(),
             last_agent_activity: Utc::now(),
+            agents: HashMap::new(),
+            ai_suggestions: Vec::new(),
         }
     }
 }
@@ -472,4 +484,60 @@ pub enum PerformanceWarningSeverity {
     Low,
     Medium,
     High,
+}
+
+/// Agent information for UI display
+#[derive(Debug, Clone)]
+pub struct UIAgentInfo {
+    pub status: AgentStatus,
+    pub agent_type: AgentType,
+    pub last_active: DateTime<Utc>,
+    pub tasks_completed: usize,
+    pub performance_score: f64,
+    pub recent_tasks: Vec<TaskInfo>,
+}
+
+impl Default for UIAgentInfo {
+    fn default() -> Self {
+        Self {
+            status: AgentStatus::Idle,
+            agent_type: AgentType::Commit,
+            last_active: Utc::now(),
+            tasks_completed: 0,
+            performance_score: 0.8,
+            recent_tasks: Vec::new(),
+        }
+    }
+}
+
+/// Task information for UI display
+#[derive(Debug, Clone)]
+pub struct TaskInfo {
+    pub success: bool,
+    pub description: String,
+    pub duration: Duration,
+}
+
+/// AI suggestion information
+#[derive(Debug, Clone)]
+pub struct AISuggestion {
+    pub confidence: f64,
+    pub suggestion_type: String,
+    pub title: String,
+    pub agent_id: usize,
+    pub timestamp: DateTime<Utc>,
+    pub content: String,
+}
+
+impl Default for AISuggestion {
+    fn default() -> Self {
+        Self {
+            confidence: 0.5,
+            suggestion_type: "general".to_string(),
+            title: "AI Suggestion".to_string(),
+            agent_id: 0,
+            timestamp: Utc::now(),
+            content: "No content".to_string(),
+        }
+    }
 }

@@ -619,7 +619,7 @@
 
         #customPromptModal .form-input:focus {
             border-color: #007acc;
-            box-shadow: 
+            box-shadow:
                 0 0 0 3px rgba(0, 122, 204, 0.1),
                 inset 0 1px 2px rgba(0, 0, 0, 0.1);
             outline: none;
@@ -5199,9 +5199,7 @@
                 <div class="nav-tab" data-view="stash">Stash</div>
                 <div class="nav-tab" data-view="status">Status</div>
                 <div class="nav-tab" data-view="remotes">Remotes</div>
-                <div class="nav-tab" data-view="history">History</div>
                 <div class="nav-tab" data-view="workflow">Git 工作流</div>
-                <div class="nav-tab" data-view="collaboration">团队协作</div>
             </div>
             <div class="sync-status" id="syncStatus">
                 <span class="refresh-icon">🔄</span>
@@ -5271,7 +5269,7 @@
                         <button class="btn">Pull</button>
                         <button class="btn btn-secondary" onclick="refreshView()">🔄 Refresh</button>
                     </div>
-                    
+
                     <!-- Git Log for Branches -->
                     <div style="margin-top: 16px;">
                         <h4 style="margin-bottom: 8px; color: #cccccc;">Git Log</h4>
@@ -5314,12 +5312,12 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="margin-top: 16px; padding: 12px; background: #1e1e1e; border-radius: 4px;">
                         <div style="font-size: 12px; color: #969696;">
-                            <span class="kbd">Enter</span> Checkout | 
-                            <span class="kbd">c</span> Create | 
-                            <span class="kbd">d</span> Delete | 
+                            <span class="kbd">Enter</span> Checkout |
+                            <span class="kbd">c</span> Create |
+                            <span class="kbd">d</span> Delete |
                             <span class="kbd">m</span> Merge
                         </div>
                     </div>
@@ -5348,7 +5346,7 @@
                         <button class="btn">Compare</button>
                         <button class="btn btn-secondary" onclick="refreshView()">🔄 Refresh</button>
                     </div>
-                    
+
                     <!-- Git Log for Tags -->
                     <div style="margin-top: 16px;">
                         <h4 style="margin-bottom: 8px; color: #cccccc;">Git Log</h4>
@@ -5399,12 +5397,12 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="margin-top: 16px; padding: 12px; background: #1e1e1e; border-radius: 4px;">
                         <div style="font-size: 12px; color: #969696;">
-                            <span class="kbd">Enter</span> Diff | 
-                            <span class="kbd">c</span> Create Tag | 
-                            <span class="kbd">d</span> Delete | 
+                            <span class="kbd">Enter</span> Diff |
+                            <span class="kbd">c</span> Create Tag |
+                            <span class="kbd">d</span> Delete |
                             <span class="kbd">r</span> Reword |
                             <span class="kbd">↑↓</span> Navigate
                         </div>
@@ -5421,7 +5419,7 @@
                             <button class="btn btn-secondary" onclick="refreshView()">🔄 Refresh</button>
                         </div>
                     </div>
-                    
+
                     <!-- Git Log Display (hidden in stash mode) -->
                     <div class="git-log" id="gitLog" style="display: none;">
                         <div class="commit-item selected" data-hash="18c4a3a" onclick="selectMainCommit('18c4a3a')">
@@ -5443,7 +5441,7 @@
                             <span class="commit-message">feat(diff_viewer): 添加 Diff 修改块</span>
                         </div>
                     </div>
-                    
+
                     <!-- Stash Files Display (shown in stash mode) -->
                     <div class="stash-files" id="stashFiles" style="display: block;">
                         <div style="margin-bottom: 16px;">
@@ -5452,7 +5450,7 @@
                                 <span class="kbd">↑↓</span> Navigate | <span class="kbd">Enter</span> Show File Diff | <span class="kbd">Space</span> Select
                             </div>
                         </div>
-                        
+
                         <!-- File Status List for Stash -->
                         <div class="file-status-list" id="stashFilesList">
                             <div class="file-item unstaged selected" onclick="selectStashFile(this)" data-file="src/core/auth/login.rs">
@@ -5483,20 +5481,20 @@
                                 </span>
                             </div>
                         </div>
-                        
+
                         <!-- Stash Actions -->
                         <div style="margin-top: 16px; padding: 12px; background: #1e1e1e; border-radius: 4px;">
                             <div style="font-size: 12px; color: #969696;">
-                                <span class="kbd">Enter</span> Show File Diff | 
-                                <span class="kbd">Space</span> Select File | 
-                                <span class="kbd">a</span> Apply Stash | 
-                                <span class="kbd">p</span> Pop Stash | 
+                                <span class="kbd">Enter</span> Show File Diff |
+                                <span class="kbd">Space</span> Select File |
+                                <span class="kbd">a</span> Apply Stash |
+                                <span class="kbd">p</span> Pop Stash |
                                 <span class="kbd">d</span> Drop Stash |
                                 <span class="kbd">↑↓</span> Navigate
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Selected Commit Details -->
                     <div id="selectedCommitDetails" style="margin: 16px 0; padding: 16px; background: #252526; border-radius: 4px; border: 1px solid #3e3e42; display: none;">
                         <div style="color: #4ec9b0; font-weight: bold; margin-bottom: 8px;">
@@ -5516,7 +5514,7 @@
                             <button class="btn btn-secondary" onclick="cherryPickThis()">Cherry Pick</button>
                         </div>
                     </div>
-                    
+
                     <div class="quick-actions">
                         <span class="quick-action" onclick="rewordCommit()"><kbd>r</kbd> Reword</span>
                         <span class="quick-action" onclick="editCommit()"><kbd>e</kbd> Edit</span>
@@ -5609,7 +5607,7 @@
                             <div style="font-weight: bold; color: #4ec9b0;">0 files</div>
                         </div>
                     </div>
-                    
+
                     <!-- Staged Changes Section -->
                     <div id="stagedSection" style="margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -5625,7 +5623,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Modified Files Section -->
                     <div style="margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -5755,7 +5753,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Untracked Files Section -->
                     <div style="margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -5818,7 +5816,7 @@
                             <button class="btn btn-secondary" onclick="refreshView()">🔄 Refresh</button>
                         </div>
                     </div>
-                    
+
                     <!-- Keyboard Shortcuts -->
                     <div style="padding: 12px; background: #1e1e1e; border-radius: 4px; border-left: 3px solid #569cd6;">
                         <div style="font-size: 12px; color: #969696; display: flex; flex-wrap: gap: 16px;">
@@ -5843,7 +5841,7 @@
                         <button class="btn">Sync</button>
                         <button class="btn btn-secondary" onclick="refreshView()">🔄 Refresh</button>
                     </div>
-                    
+
                     <!-- Git Log for Remotes -->
                     <div style="margin-top: 16px;">
                         <h4 style="margin-bottom: 8px; color: #cccccc;">Git Log</h4>
@@ -5874,12 +5872,12 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="margin-top: 16px; padding: 12px; background: #1e1e1e; border-radius: 4px;">
                         <div style="font-size: 12px; color: #969696;">
-                            <span class="kbd">Enter</span> Diff | 
-                            <span class="kbd">f</span> Fetch | 
-                            <span class="kbd">p</span> Pull | 
+                            <span class="kbd">Enter</span> Diff |
+                            <span class="kbd">f</span> Fetch |
+                            <span class="kbd">p</span> Pull |
                             <span class="kbd">r</span> Reword |
                             <span class="kbd">↑↓</span> Navigate
                         </div>
@@ -6727,10 +6725,10 @@
             <div class="modal-body">
                 <div id="promptMessage" style="padding: 10px 0 20px 0; line-height: 1.6; color: #e0e0e0;"></div>
                 <div class="form-group">
-                    <input type="text" 
-                           id="promptInput" 
-                           class="form-input" 
-                           placeholder="请输入..." 
+                    <input type="text"
+                           id="promptInput"
+                           class="form-input"
+                           placeholder="请输入..."
                            style="width: 100%; margin-bottom: 0;"
                            autocomplete="off">
                 </div>
@@ -6755,7 +6753,7 @@
             selectedBranchIndex: 0,
             branchesFocusOnGitLog: false,
             stashFocusOnGitLog: false,
-            
+
             // 状态更新方法
             updateView(newView) {
                 if (this.currentView !== newView) {
@@ -6764,7 +6762,7 @@
                     this.onViewChange(oldView, newView);
                 }
             },
-            
+
             // 视图切换回调
             onViewChange(oldView, newView) {
                 // 更新状态栏
@@ -6772,24 +6770,24 @@
                 if (viewElement) {
                     viewElement.textContent = newView.charAt(0).toUpperCase() + newView.slice(1);
                 }
-                
+
                 // 更新动态列表
                 if (newView === 'branches' || newView === 'git-log') {
-                    updateDynamicListSafe(newView);
+                    updateDynamicListSafeV2(newView);
                 } else {
                     updateDynamicList(newView);
                 }
-                
+
                 // 清理旧状态
                 this.cleanupViewState(oldView);
-                
+
                 // 初始化新视图状态
                 this.initializeViewState(newView);
-                
+
                 // 同步全局变量
                 this.syncToGlobals();
             },
-            
+
             // 同步AppState到全局变量
             syncToGlobals() {
                 currentView = this.currentView;
@@ -6803,7 +6801,7 @@
                 branchesFocusOnGitLog = this.branchesFocusOnGitLog;
                 stashFocusOnGitLog = this.stashFocusOnGitLog;
             },
-            
+
             // 从全局变量同步到AppState
             syncFromGlobals() {
                 this.currentView = currentView;
@@ -6817,7 +6815,7 @@
                 this.branchesFocusOnGitLog = branchesFocusOnGitLog;
                 this.stashFocusOnGitLog = stashFocusOnGitLog;
             },
-            
+
             cleanupViewState(view) {
                 // 清理特定视图的状态
                 switch(view) {
@@ -6829,7 +6827,7 @@
                         break;
                 }
             },
-            
+
             initializeViewState(view) {
                 // 初始化特定视图的状态
                 switch(view) {
@@ -6896,7 +6894,7 @@
                 { name: 'origin', url: 'https://github.com/user/ai-commit.git', type: 'fetch/push' },
                 { name: 'upstream', url: 'https://github.com/original/ai-commit.git', type: 'fetch' }
             ],
-            
+
             // 数据获取方法
             getBranches() { return this.branches; },
             getBranchCommits(branchIndex) { return this.commits.byBranch[branchIndex] || this.commits.byBranch[0]; },
@@ -6909,30 +6907,30 @@
         // 事件管理系统 - 防止内存泄漏
         const EventManager = {
             listeners: new Map(),
-            
+
             addEventListener(element, eventType, handler, options = {}) {
                 if (!element) return null;
-                
+
                 const elementKey = element.id || element.tagName + '_' + Date.now();
                 if (!this.listeners.has(elementKey)) {
                     this.listeners.set(elementKey, []);
                 }
-                
+
                 const listenerInfo = { element, eventType, handler, options };
                 this.listeners.get(elementKey).push(listenerInfo);
-                
+
                 element.addEventListener(eventType, handler, options);
                 return listenerInfo;
             },
-            
+
             removeEventListener(element, eventType, handler) {
                 if (!element) return;
-                
+
                 element.removeEventListener(eventType, handler);
-                
+
                 // 从记录中删除
                 for (const [key, listeners] of this.listeners.entries()) {
-                    const index = listeners.findIndex(l => 
+                    const index = listeners.findIndex(l =>
                         l.element === element && l.eventType === eventType && l.handler === handler
                     );
                     if (index !== -1) {
@@ -6944,16 +6942,16 @@
                     }
                 }
             },
-            
+
             removeAllListeners(element) {
                 if (!element) return;
-                
+
                 for (const [key, listeners] of this.listeners.entries()) {
                     const elementListeners = listeners.filter(l => l.element === element);
                     elementListeners.forEach(l => {
                         element.removeEventListener(l.eventType, l.handler);
                     });
-                    
+
                     // 移除这个元素的所有监听器
                     const remainingListeners = listeners.filter(l => l.element !== element);
                     if (remainingListeners.length === 0) {
@@ -6963,7 +6961,7 @@
                     }
                 }
             },
-            
+
             cleanup() {
                 // 清理所有事件监听器
                 for (const [key, listeners] of this.listeners.entries()) {
@@ -6975,13 +6973,13 @@
                 }
                 this.listeners.clear();
             },
-            
+
             // 清理特定容器内的所有事件监听器
             cleanupContainer(container) {
                 if (!container) return;
-                
+
                 for (const [key, listeners] of this.listeners.entries()) {
-                    const containerListeners = listeners.filter(l => 
+                    const containerListeners = listeners.filter(l =>
                         container.contains(l.element) || l.element === container
                     );
                     containerListeners.forEach(l => {
@@ -7018,7 +7016,7 @@
                 }
                 return element;
             },
-            
+
             querySelector(selector) {
                 try {
                     const element = document.querySelector(selector);
@@ -7032,7 +7030,7 @@
                     return null;
                 }
             },
-            
+
             querySelectorAll(selector) {
                 try {
                     return document.querySelectorAll(selector);
@@ -7041,7 +7039,7 @@
                     return [];
                 }
             },
-            
+
             safeSetTextContent(element, text) {
                 if (element && typeof element.textContent !== 'undefined') {
                     element.textContent = text;
@@ -7049,7 +7047,7 @@
                 }
                 return false;
             },
-            
+
             safeSetInnerHTML(element, html) {
                 if (element && typeof element.innerHTML !== 'undefined') {
                     element.innerHTML = html;
@@ -7057,7 +7055,7 @@
                 }
                 return false;
             },
-            
+
             safeAddClass(element, className) {
                 if (element && element.classList) {
                     element.classList.add(className);
@@ -7065,7 +7063,7 @@
                 }
                 return false;
             },
-            
+
             safeRemoveClass(element, className) {
                 if (element && element.classList) {
                     element.classList.remove(className);
@@ -7073,7 +7071,7 @@
                 }
                 return false;
             },
-            
+
             safeToggleClass(element, className, condition) {
                 if (element && element.classList) {
                     if (typeof condition !== 'undefined') {
@@ -7163,7 +7161,7 @@
                 this.loadSavedSearches();
                 this.setupAdvancedSearchUI();
             },
-            
+
             /**
              * 设置高级搜索UI
              */
@@ -7750,7 +7748,7 @@
                 // 简单实现：重新执行搜索
                 this.performSearch(this.currentSearchTerm);
             },
-            
+
             /**
              * 应用过滤器
              */
@@ -7763,7 +7761,7 @@
                 this.updateFileList();
                 this.updateSearchStats();
             },
-            
+
             /**
              * 快速过滤器
              */
@@ -7772,16 +7770,16 @@
                 document.querySelectorAll('.quick-filter').forEach(btn => {
                     btn.classList.remove('active');
                 });
-                
+
                 // 激活当前过滤器
                 const activeBtn = document.querySelector(`[data-filter="${filterType}"]`);
                 if (activeBtn) {
                     activeBtn.classList.add('active');
                 }
-                
+
                 this.applyFilter('status', filterType);
             },
-            
+
             /**
              * 过滤文件项
              */
@@ -7791,12 +7789,12 @@
                     if (this.currentSearchTerm) {
                         const fileName = item.dataset.file.toLowerCase();
                         const fileStatus = item.dataset.status.toLowerCase();
-                        if (!fileName.includes(this.currentSearchTerm) && 
+                        if (!fileName.includes(this.currentSearchTerm) &&
                             !fileStatus.includes(this.currentSearchTerm)) {
                             return false;
                         }
                     }
-                    
+
                     // 状态过滤
                     if (this.activeFilters.has('status')) {
                         const statusFilter = this.activeFilters.get('status');
@@ -7804,7 +7802,7 @@
                             return false;
                         }
                     }
-                    
+
                     // 类型过滤
                     if (this.activeFilters.has('type')) {
                         const typeFilter = this.activeFilters.get('type');
@@ -7812,29 +7810,29 @@
                             return false;
                         }
                     }
-                    
+
                     return true;
                 });
             },
-            
+
             /**
              * 更新文件列表显示
              */
             updateFileList() {
                 const fileContainers = document.querySelectorAll('.file-list-content');
-                
+
                 fileContainers.forEach(container => {
                     const allItems = Array.from(container.querySelectorAll('.file-item'));
                     const filteredItems = this.filterFileItems(allItems);
-                    
+
                     // 隐藏所有项目
                     allItems.forEach(item => item.style.display = 'none');
-                    
+
                     // 显示过滤后的项目
                     filteredItems.forEach(item => item.style.display = 'flex');
                 });
             },
-            
+
             /**
              * 更新搜索统计
              */
@@ -8193,7 +8191,7 @@
                     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
                 }
             },
-            
+
             /**
              * 清除搜索
              */
@@ -11336,10 +11334,10 @@
                 containerHeight: 400,
                 buffer: 5
             },
-            
+
             intersectionObserver: null,
             resizeObserver: null,
-            
+
             /**
              * 初始化性能优化
              */
@@ -11349,43 +11347,43 @@
                 this.setupMemoryOptimization();
                 this.setupPerformanceMonitoring();
             },
-            
+
             /**
              * 虚拟滚动实现
              */
             setupVirtualScrolling() {
                 const virtualLists = document.querySelectorAll('.virtual-list');
-                
+
                 virtualLists.forEach(list => {
                     this.createVirtualScrollInstance(list);
                 });
             },
-            
+
             /**
              * 创建虚拟滚动实例
              */
             createVirtualScrollInstance(container) {
                 const items = Array.from(container.querySelectorAll('.file-item'));
                 if (items.length < 20) return; // 小于20项不使用虚拟滚动
-                
+
                 const { itemHeight, buffer } = this.virtualScrollConfig;
                 const containerHeight = container.clientHeight || 400;
                 const visibleCount = Math.ceil(containerHeight / itemHeight);
-                
+
                 let scrollTop = 0;
                 let startIndex = 0;
                 let endIndex = Math.min(visibleCount + buffer, items.length);
-                
+
                 const virtualContent = document.createElement('div');
                 virtualContent.className = 'virtual-list-content';
                 virtualContent.style.height = `${items.length * itemHeight}px`;
-                
+
                 // 初始渲染
                 this.renderVisibleItems(virtualContent, items, startIndex, endIndex, itemHeight);
-                
+
                 container.innerHTML = '';
                 container.appendChild(virtualContent);
-                
+
                 // 滚动事件处理
                 let scrollTimeout;
                 EventManager.addEventListener(container, 'scroll', () => {
@@ -11394,26 +11392,26 @@
                         scrollTop = container.scrollTop;
                         startIndex = Math.floor(scrollTop / itemHeight);
                         endIndex = Math.min(startIndex + visibleCount + buffer, items.length);
-                        
+
                         this.renderVisibleItems(virtualContent, items, startIndex, endIndex, itemHeight);
                     }, 16); // ~60fps
                 });
             },
-            
+
             /**
              * 渲染可见项目
              */
             renderVisibleItems(container, items, startIndex, endIndex, itemHeight) {
                 // 清空容器
                 container.innerHTML = '';
-                
+
                 // 添加上方填充
                 if (startIndex > 0) {
                     const topSpacer = document.createElement('div');
                     topSpacer.style.height = `${startIndex * itemHeight}px`;
                     container.appendChild(topSpacer);
                 }
-                
+
                 // 渲染可见项目
                 for (let i = startIndex; i < endIndex; i++) {
                     if (items[i]) {
@@ -11423,7 +11421,7 @@
                         container.appendChild(clonedItem);
                     }
                 }
-                
+
                 // 添加下方填充
                 const remainingItems = items.length - endIndex;
                 if (remainingItems > 0) {
@@ -11432,7 +11430,7 @@
                     container.appendChild(bottomSpacer);
                 }
             },
-            
+
             /**
              * 懒加载设置
              */
@@ -11448,20 +11446,20 @@
                         },
                         { threshold: 0.1 }
                     );
-                    
+
                     // 观察懒加载元素
                     document.querySelectorAll('[data-lazy]').forEach(el => {
                         this.intersectionObserver.observe(el);
                     });
                 }
             },
-            
+
             /**
              * 加载懒加载内容
              */
             loadLazyContent(element) {
                 const lazyType = element.dataset.lazy;
-                
+
                 switch (lazyType) {
                     case 'diff':
                         this.loadLazyDiff(element);
@@ -11472,10 +11470,10 @@
                     default:
                         console.warn('Unknown lazy type:', lazyType);
                 }
-                
+
                 this.intersectionObserver.unobserve(element);
             },
-            
+
             /**
              * 内存优化
              */
@@ -11484,7 +11482,7 @@
                 setInterval(() => {
                     this.cleanupCache();
                 }, 60000); // 每分钟清理一次
-                
+
                 // 页面隐藏时暂停动画
                 EventManager.addEventListener(document, 'visibilitychange', () => {
                     if (document.hidden) {
@@ -11494,7 +11492,7 @@
                     }
                 });
             },
-            
+
             /**
              * 清理缓存
              */
@@ -11508,13 +11506,13 @@
                         SearchManager.searchCache.set(key, value);
                     });
                 }
-                
+
                 // 强制垃圾回收 (如果可用)
                 if (window.gc) {
                     window.gc();
                 }
             },
-            
+
             /**
              * 暂停动画
              */
@@ -11523,7 +11521,7 @@
                     el.style.animationPlayState = 'paused';
                 });
             },
-            
+
             /**
              * 恢复动画
              */
@@ -11532,7 +11530,7 @@
                     el.style.animationPlayState = 'running';
                 });
             },
-            
+
             /**
              * 性能监控
              */
@@ -11546,21 +11544,21 @@
                             }
                         });
                     });
-                    
+
                     try {
                         longTaskObserver.observe({ entryTypes: ['longtask'] });
                     } catch (e) {
                         console.warn('Long task monitoring not supported');
                     }
                 }
-                
+
                 // 内存使用监控
                 if ('memory' in performance) {
                     setInterval(() => {
                         const memory = performance.memory;
                         const usedMB = Math.round(memory.usedJSHeapSize / 1024 / 1024);
                         const totalMB = Math.round(memory.totalJSHeapSize / 1024 / 1024);
-                        
+
                         if (usedMB > 100) { // 超过100MB警告
                             console.warn(`High memory usage: ${usedMB}MB / ${totalMB}MB`);
                         }
@@ -11571,12 +11569,12 @@
 
         // ========================================
         // ♿ Accessibility Enhancement Module
-        // ========================================  
+        // ========================================
         const AccessibilityManager = {
             focusHistory: [],
             ariaLiveRegions: new Map(),
             keyboardNavigation: true,
-            
+
             /**
              * 初始化可访问性增强
              */
@@ -11587,14 +11585,14 @@
                 this.setupFocusManagement();
                 this.setupSkipLinks();
             },
-            
+
             /**
              * 设置ARIA标签
              */
             setupARIALabels() {
                 // 为所有交互元素添加适当的ARIA标签
                 const interactiveElements = document.querySelectorAll('button, input, select, [role="button"]');
-                
+
                 interactiveElements.forEach(element => {
                     if (!element.getAttribute('aria-label') && !element.getAttribute('aria-labelledby')) {
                         const label = this.generateARIALabel(element);
@@ -11603,11 +11601,11 @@
                         }
                     }
                 });
-                
+
                 // 设置地标区域
                 this.setupLandmarks();
             },
-            
+
             /**
              * 生成ARIA标签
              */
@@ -11615,10 +11613,10 @@
                 const text = element.textContent?.trim();
                 const title = element.getAttribute('title');
                 const placeholder = element.getAttribute('placeholder');
-                
+
                 return text || title || placeholder || null;
             },
-            
+
             /**
              * 设置地标区域
              */
@@ -11626,23 +11624,23 @@
                 const sidebar = document.querySelector('.sidebar');
                 const main = document.querySelector('.content-area');
                 const nav = document.querySelector('.header-nav');
-                
+
                 if (sidebar && !sidebar.getAttribute('role')) {
                     sidebar.setAttribute('role', 'complementary');
                     sidebar.setAttribute('aria-label', 'Repository navigation');
                 }
-                
+
                 if (main && !main.getAttribute('role')) {
                     main.setAttribute('role', 'main');
                     main.setAttribute('aria-label', 'Main content');
                 }
-                
+
                 if (nav && !nav.getAttribute('role')) {
                     nav.setAttribute('role', 'navigation');
                     nav.setAttribute('aria-label', 'View navigation');
                 }
             },
-            
+
             /**
              * 增强键盘导航
              */
@@ -11652,7 +11650,7 @@
                     if (!element.getAttribute('tabindex')) {
                         element.setAttribute('tabindex', '0');
                     }
-                    
+
                     // 添加键盘事件
                     EventManager.addEventListener(element, 'keydown', (e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -11661,29 +11659,29 @@
                         }
                     });
                 });
-                
+
                 // 显示键盘导航提示
                 this.setupKeyboardHints();
             },
-            
+
             /**
              * 设置键盘提示
              */
             setupKeyboardHints() {
                 let hintTimeout;
-                
+
                 EventManager.addEventListener(document, 'keydown', (e) => {
                     // 显示键盘导航提示
                     if (e.key === 'Tab' || e.key === 'F1') {
                         this.showKeyboardHints();
-                        
+
                         clearTimeout(hintTimeout);
                         hintTimeout = setTimeout(() => {
                             this.hideKeyboardHints();
                         }, 5000);
                     }
                 });
-                
+
                 // Esc隐藏提示
                 EventManager.addEventListener(document, 'keydown', (e) => {
                     if (e.key === 'Escape') {
@@ -11691,13 +11689,13 @@
                     }
                 });
             },
-            
+
             /**
              * 显示键盘导航提示
              */
             showKeyboardHints() {
                 let hint = document.querySelector('.keyboard-nav-hint');
-                
+
                 if (!hint) {
                     hint = document.createElement('div');
                     hint.className = 'keyboard-nav-hint';
@@ -11711,10 +11709,10 @@
                     `;
                     document.body.appendChild(hint);
                 }
-                
+
                 hint.classList.add('visible');
             },
-            
+
             /**
              * 隐藏键盘导航提示
              */
@@ -11724,7 +11722,7 @@
                     hint.classList.remove('visible');
                 }
             },
-            
+
             /**
              * 设置屏幕阅读器支持
              */
@@ -11732,11 +11730,11 @@
                 // 创建实时区域用于状态更新
                 this.createLiveRegion('status', 'polite');
                 this.createLiveRegion('alerts', 'assertive');
-                
+
                 // 监听状态变化并通知屏幕阅读器
                 this.setupStatusAnnouncements();
             },
-            
+
             /**
              * 创建实时区域
              */
@@ -11746,11 +11744,11 @@
                 region.className = 'sr-only';
                 region.setAttribute('aria-live', politeness);
                 region.setAttribute('aria-atomic', 'true');
-                
+
                 document.body.appendChild(region);
                 this.ariaLiveRegions.set(id, region);
             },
-            
+
             /**
              * 设置状态公告
              */
@@ -11762,7 +11760,7 @@
                     this.announceViewChange(newView);
                 };
             },
-            
+
             /**
              * 公告视图变化
              */
@@ -11772,7 +11770,7 @@
                     statusRegion.textContent = `Switched to ${viewName} view`;
                 }
             },
-            
+
             /**
              * 公告状态消息
              */
@@ -11782,7 +11780,7 @@
                     region.textContent = message;
                 }
             },
-            
+
             /**
              * 设置焦点管理
              */
@@ -11794,17 +11792,17 @@
                         this.focusHistory.shift();
                     }
                 });
-                
+
                 // 为模态框设置焦点陷阱
                 this.setupModalFocusTraps();
             },
-            
+
             /**
              * 设置模态框焦点陷阱
              */
             setupModalFocusTraps() {
                 const modals = document.querySelectorAll('.modal');
-                
+
                 modals.forEach(modal => {
                     EventManager.addEventListener(modal, 'keydown', (e) => {
                         if (e.key === 'Tab' && modal.classList.contains('active')) {
@@ -11813,7 +11811,7 @@
                     });
                 });
             },
-            
+
             /**
              * 焦点陷阱
              */
@@ -11821,10 +11819,10 @@
                 const focusableElements = container.querySelectorAll(
                     'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
                 );
-                
+
                 const firstElement = focusableElements[0];
                 const lastElement = focusableElements[focusableElements.length - 1];
-                
+
                 if (e.shiftKey) {
                     if (document.activeElement === firstElement) {
                         e.preventDefault();
@@ -11837,7 +11835,7 @@
                     }
                 }
             },
-            
+
             /**
              * 设置跳转链接
              */
@@ -11850,17 +11848,17 @@
                 skipLink.style.top = '0';
                 skipLink.style.left = '0';
                 skipLink.style.zIndex = '9999';
-                
+
                 EventManager.addEventListener(skipLink, 'focus', () => {
                     skipLink.classList.remove('sr-only');
                 });
-                
+
                 EventManager.addEventListener(skipLink, 'blur', () => {
                     skipLink.classList.add('sr-only');
                 });
-                
+
                 document.body.insertBefore(skipLink, document.body.firstChild);
-                
+
                 // 为主内容添加ID
                 const mainContent = document.querySelector('.content-area');
                 if (mainContent && !mainContent.id) {
@@ -11874,14 +11872,14 @@
             const element = document.createElement('div');
             element.className = `list-item ${isSelected ? 'selected' : ''}`;
             EventManager.addEventListener(element, 'click', () => selectBranch(index, branchName));
-            
+
             const icon = document.createElement('span');
             icon.className = 'icon';
             icon.textContent = isCurrent ? '★' : ' ';
-            
+
             element.appendChild(icon);
             element.appendChild(document.createTextNode(` ${branchName}`));
-            
+
             return element;
         }
 
@@ -11889,17 +11887,17 @@
         function createSafeListItem(text, isSelected = false, clickHandler = null, additionalContent = '') {
             const element = document.createElement('div');
             element.className = `list-item ${isSelected ? 'selected' : ''}`;
-            
+
             if (additionalContent) {
                 element.innerHTML = additionalContent + ' ' + escapeHtml(text);
             } else {
                 element.textContent = text;
             }
-            
+
             if (clickHandler) {
                 EventManager.addEventListener(element, 'click', clickHandler);
             }
-            
+
             return element;
         }
 
@@ -11907,13 +11905,13 @@
         function updateDynamicListSafeV2(view) {
             const dynamicList = DOMUtils.getElementById('dynamicList');
             if (!dynamicList) return;
-            
+
             // 清理旧的事件监听器和内容
             EventManager.cleanupContainer(dynamicList);
             dynamicList.innerHTML = '';
-            
+
             const branchNames = AppData.getBranches();
-            
+
             switch(view) {
                 case 'stash':
                     if (isStashMode) {
@@ -11922,7 +11920,7 @@
                         stashTitle.className = 'list-title';
                         stashTitle.textContent = 'STASH ENTRIES';
                         dynamicList.appendChild(stashTitle);
-                        
+
                         // 添加 stash 条目
                         AppData.getStashes().forEach((stash, index) => {
                             const stashElement = createSafeListItem(
@@ -11938,7 +11936,7 @@
                         commitsTitle.className = 'list-title';
                         commitsTitle.textContent = 'Recent Commits';
                         dynamicList.appendChild(commitsTitle);
-                        
+
                         const recentCommits = AppData.getRecentCommits();
                         recentCommits.forEach((commitHash, index) => {
                             const commitElement = createSafeListItem(
@@ -11951,7 +11949,7 @@
                         });
                     }
                     break;
-                    
+
                 // 其他视图保持使用原来的逻辑，但添加清理
                 default:
                     // 继续使用原有逻辑但需要添加事件清理
@@ -11963,22 +11961,22 @@
         function updateDynamicListLegacy(view) {
             const dynamicList = document.getElementById('dynamicList');
             if (!dynamicList) return;
-            
+
             // 清理旧的事件监听器
             EventManager.cleanupContainer(dynamicList);
-            
+
             let content = '';
-            
+
             switch(view) {
                 case 'git-log':
                     const selectedBranchName = branchNames[selectedBranchIndex] || branchNames[0];
-                    
+
                     // 创建标题
                     const title = document.createElement('div');
                     title.className = 'list-title';
                     title.textContent = `Git Log - ${selectedBranchName}`;
                     dynamicList.appendChild(title);
-                    
+
                     // 创建当前分支信息
                     const branchInfo = document.createElement('div');
                     branchInfo.style.cssText = 'margin-bottom: 12px; padding: 8px; background: #2d2d30; border-radius: 4px;';
@@ -11987,45 +11985,45 @@
                         <div style="color: #cccccc; margin-top: 4px;">${escapeHtml(selectedBranchName)}</div>
                     `;
                     dynamicList.appendChild(branchInfo);
-                    
+
                     // 创建分支切换标题
                     const switchTitle = document.createElement('div');
                     switchTitle.className = 'list-title';
                     switchTitle.style.marginTop = '16px';
                     switchTitle.textContent = 'Switch Branch:';
                     dynamicList.appendChild(switchTitle);
-                    
+
                     // 添加分支列表
                     branchNames.forEach((branchName, index) => {
                         const branchElement = createBranchListElement(
-                            index, 
-                            branchName, 
-                            selectedBranchIndex === index, 
+                            index,
+                            branchName,
+                            selectedBranchIndex === index,
                             currentBranchIndex === index
                         );
                         dynamicList.appendChild(branchElement);
                     });
                     break;
-                    
+
                 case 'branches':
                     // 创建分支列表标题
                     const branchesTitle = document.createElement('div');
                     branchesTitle.className = 'list-title';
                     branchesTitle.textContent = 'Branches List';
                     dynamicList.appendChild(branchesTitle);
-                    
+
                     // 添加分支列表
                     branchNames.forEach((branchName, index) => {
                         const branchElement = createBranchListElement(
-                            index, 
-                            branchName, 
-                            selectedBranchIndex === index, 
+                            index,
+                            branchName,
+                            selectedBranchIndex === index,
                             currentBranchIndex === index
                         );
                         dynamicList.appendChild(branchElement);
                     });
                     break;
-                    
+
                 // 其他视图保持原有逻辑...
                 default:
                     // 使用原有的 updateDynamicList 处理其他视图
@@ -12039,7 +12037,7 @@
             const alertTitle = DOMUtils.getElementById('alertTitle');
             const alertMessage = DOMUtils.getElementById('alertMessage');
             const alertModal = DOMUtils.getElementById('customAlertModal');
-            
+
             if (alertTitle && alertMessage && alertModal) {
                 DOMUtils.safeSetTextContent(alertTitle, `${icon} ${title}`);
                 DOMUtils.safeSetInnerHTML(alertMessage, message.replace(/\n/g, '<br>'));
@@ -12059,13 +12057,13 @@
             const confirmMessage = DOMUtils.getElementById('confirmMessage');
             const confirmModal = DOMUtils.getElementById('customConfirmModal');
             const confirmBtn = DOMUtils.getElementById('confirmYesBtn');
-            
+
             if (confirmTitle && confirmMessage && confirmModal) {
                 DOMUtils.safeSetTextContent(confirmTitle, `${icon} ${title}`);
                 DOMUtils.safeSetInnerHTML(confirmMessage, message.replace(/\n/g, '<br>'));
                 DOMUtils.safeAddClass(confirmModal, 'active');
                 customConfirmCallback = onConfirm;
-                
+
                 if (confirmBtn) {
                     confirmBtn.onclick = function() {
                         if (customConfirmCallback) {
@@ -12101,17 +12099,17 @@
             const promptModal = DOMUtils.getElementById('customPromptModal');
             const promptInput = DOMUtils.getElementById('promptInput');
             const promptOkBtn = DOMUtils.getElementById('promptOkBtn');
-            
+
             if (promptTitle && promptMessage && promptModal && promptInput && promptOkBtn) {
                 DOMUtils.safeSetTextContent(promptTitle, `${icon} ${title}`);
                 DOMUtils.safeSetInnerHTML(promptMessage, message.replace(/\n/g, '<br>'));
-                
+
                 // 设置输入框
                 promptInput.value = defaultValue;
                 promptInput.placeholder = placeholder;
-                
+
                 DOMUtils.safeAddClass(promptModal, 'active');
-                
+
                 // 自动聚焦到输入框
                 setTimeout(() => {
                     promptInput.focus();
@@ -12119,7 +12117,7 @@
                         promptInput.select();
                     }
                 }, 100);
-                
+
                 // 设置确认按钮回调
                 const handleConfirm = () => {
                     const inputValue = promptInput.value.trim();
@@ -12128,10 +12126,10 @@
                     }
                     closeCustomPrompt();
                 };
-                
+
                 // 绑定确认按钮事件
                 promptOkBtn.onclick = handleConfirm;
-                
+
                 // 绑定Enter键事件
                 promptInput.onkeydown = function(e) {
                     if (e.key === 'Enter') {
@@ -12151,16 +12149,16 @@
         function closeCustomPrompt() {
             const promptModal = DOMUtils.getElementById('customPromptModal');
             const promptInput = DOMUtils.getElementById('promptInput');
-            
+
             if (promptModal) {
                 DOMUtils.safeRemoveClass(promptModal, 'active');
             }
-            
+
             if (promptInput) {
                 promptInput.value = '';
                 promptInput.onkeydown = null;
             }
-            
+
             const promptOkBtn = DOMUtils.getElementById('promptOkBtn');
             if (promptOkBtn) {
                 promptOkBtn.onclick = null;
@@ -12175,7 +12173,7 @@
                 const confirmModal = DOMUtils.getElementById('customConfirmModal');
                 const promptModal = DOMUtils.getElementById('customPromptModal');
                 const diffModal = DOMUtils.getElementById('diffModal');
-                
+
                 if (alertModal && alertModal.classList.contains('active')) {
                     closeCustomAlert();
                     e.stopPropagation();
@@ -12191,19 +12189,19 @@
                 }
             }
         });
-        
+
         // 改进的初始化系统
         function initializeApplication() {
             console.log('DOM Content Loaded, initializing...');
-            
+
             // 步骤1: 初始化核心系统
             initializeNavigation();
             initializeKeyboardShortcuts();
-            
+
             // 步骤2: 初始化增强功能模块
             try {
                 console.log('Initializing enhanced modules...');
-                
+
                 // 初始化搜索管理器
                 SearchManager.init();
                 console.log('✅ SearchManager initialized');
@@ -12235,36 +12233,36 @@
                 // 初始化性能管理器
                 PerformanceManager.init();
                 console.log('✅ PerformanceManager initialized');
-                
+
                 // 初始化可访问性管理器
                 AccessibilityManager.init();
                 console.log('✅ AccessibilityManager initialized');
-                
+
             } catch (error) {
                 console.error('Error initializing enhanced modules:', error);
                 // 即使增强模块失败，也要继续基础功能
             }
-            
+
             // 步骤3: 设置初始状态
             AppState.updateView('branches');
-            
+
             // 步骤4: 验证初始化完成
             validateInitialization();
-            
+
             console.log('🚀 AI-Commit TUI initialization completed with enhanced features!');
         }
-        
+
         function validateInitialization() {
             const dynamicList = DOMUtils.getElementById('dynamicList');
             const currentViewElement = DOMUtils.getElementById('currentView');
-            
+
             if (!dynamicList || !currentViewElement) {
                 console.error('Critical DOM elements not found, retrying...');
                 // 如果关键元素不存在，短暂延迟后重试
                 setTimeout(validateInitialization, 50);
                 return;
             }
-            
+
             // 确保视图正确显示
             if (currentView === 'branches') {
                 const branchNames = AppData.getBranches();
@@ -12273,10 +12271,10 @@
                 selectMainCommit('18c4a3a');
                 updateBranchesVisuialFocus();
             }
-            
+
             console.log('Application initialization completed successfully');
         }
-        
+
         // Initialize
         document.addEventListener('DOMContentLoaded', initializeApplication);
 
@@ -12297,11 +12295,11 @@
                     selectCommitElement(commit);
                 });
             });
-            
+
             // 初始化静态按钮事件
             initializeStaticButtons();
         }
-        
+
         function initializeStaticButtons() {
             // 分支操作按钮
             const checkoutBtn = DOMUtils.querySelector('button[onclick="checkoutBranch()"]');
@@ -12598,7 +12596,7 @@
             // 使用统一状态管理系统
             AppState.updateView(view);
             // 自动同步状态，不需要手动同步
-            
+
             // 处理特殊视图的额外逻辑
             if (view === 'status') {
                 // Auto-select first file in status view
@@ -13784,12 +13782,12 @@ This is an awesome project with new features!
         function updateDynamicList(view) {
             const dynamicList = document.getElementById('dynamicList');
             if (!dynamicList) return;
-            
+
             // 清理旧的事件监听器
             EventManager.cleanupContainer(dynamicList);
-            
+
             let content = '';
-            
+
 
             switch(view) {
                 case 'git-log':
@@ -13889,7 +13887,7 @@ This is an awesome project with new features!
                 const isModalOpen = document.querySelector('.modal.active');
                 const diffModal = document.getElementById('diffModal');
                 const isDiffModalOpen = diffModal && diffModal.classList.contains('active');
-                
+
                 // Handle diff modal specific keys
                 if (isDiffModalOpen) {
                     if (e.key === '1') {
@@ -13911,7 +13909,7 @@ This is an awesome project with new features!
                         return;
                     }
                 }
-                
+
                 // Number keys for navigation - only if no modal is open (扩展到支持8个视图)
                 if (e.key >= '1' && e.key <= '8' && !isModalOpen) {
                     const views = ['branches', 'tags', 'stash', 'status', 'remotes', 'history', 'workflow', 'collaboration'];
@@ -13949,9 +13947,9 @@ This is an awesome project with new features!
                         // Check if focusing on file list
                         const stashFilesElement = DOMUtils.getElementById('stashFiles');
                         const stashFilesVisible = stashFilesElement && stashFilesElement.style.display !== 'none';
-                        const focusOnFileList = (document.activeElement && document.activeElement.closest('#stashFiles')) || 
+                        const focusOnFileList = (document.activeElement && document.activeElement.closest('#stashFiles')) ||
                                                (!(document.activeElement && document.activeElement.closest('#dynamicList')) && stashFilesVisible);
-                        
+
                         if (focusOnFileList) {
                             // Show file diff for selected file in stash
                             const selectedFile = DOMUtils.querySelector('#stashFilesList .file-item.selected');
@@ -13991,7 +13989,7 @@ This is an awesome project with new features!
                         checkoutTag();
                     }
                 }
-                
+
                 // Enter for diff in remotes view
                 if (e.key === 'Enter' && currentView === 'remotes') {
                     // Check if we're in Git Log area or sidebar
@@ -14013,7 +14011,7 @@ This is an awesome project with new features!
                         commitChanges();
                     }
                 }
-                
+
                 // Space for stage/unstage in status view or select file in stash view
                 if (e.key === ' ') {
                     e.preventDefault();
@@ -14036,7 +14034,7 @@ This is an awesome project with new features!
                         }
                     }
                 }
-                
+
                 // === 重新设计的快捷键系统 ===
 
                 // 'd' 键：只用于显示差异 (diff)
@@ -14161,16 +14159,16 @@ This is an awesome project with new features!
                     } else if (currentView === 'stash' && isStashMode) {
                         // In stash mode, check if we're focusing on sidebar or file list
                         const stashFilesVisible = document.getElementById('stashFiles').style.display !== 'none';
-                        const focusOnFileList = document.activeElement.closest('#stashFiles') || 
+                        const focusOnFileList = document.activeElement.closest('#stashFiles') ||
                                                (!document.activeElement.closest('#dynamicList') && stashFilesVisible);
-                        
+
                         if (focusOnFileList) {
                             // Navigate in stash file list
                             const direction = e.key === 'ArrowUp' ? -1 : 1;
                             const allFiles = document.querySelectorAll('#stashFilesList .file-item');
                             const maxIndex = allFiles.length - 1;
                             const newIndex = Math.max(0, Math.min(maxIndex, selectedStashFileIndex + direction));
-                            
+
                             if (newIndex !== selectedStashFileIndex && allFiles.length > 0) {
                                 selectedStashFileIndex = newIndex;
                                 // Clear previous selection
@@ -14226,7 +14224,7 @@ This is an awesome project with new features!
                         const allFiles = document.querySelectorAll('#statusView .file-item');
                         const maxIndex = allFiles.length - 1;
                         const newIndex = Math.max(0, Math.min(maxIndex, selectedFileIndex + direction));
-                        
+
                         if (newIndex !== selectedFileIndex && allFiles.length > 0) {
                             selectedFileIndex = newIndex;
                             // Clear previous selection
@@ -14251,7 +14249,7 @@ This is an awesome project with new features!
                             applyEditedMessage();
                         }
                     }
-                    
+
                     // Escape to cancel edit
                     if (e.key === 'Escape' && document.getElementById('editAICommit').style.display !== 'none') {
                         e.preventDefault();
@@ -14327,15 +14325,15 @@ This is an awesome project with new features!
 
         // Diff Mode Switching
         let currentDiffMode = 'unified';
-        
+
         function switchDiffMode(mode) {
             currentDiffMode = mode;
-            
+
             // Hide all views
             document.getElementById('unifiedView').style.display = 'none';
             document.getElementById('sideBySideView').style.display = 'none';
             document.getElementById('splitView').style.display = 'none';
-            
+
             // Show selected view
             switch(mode) {
                 case 'unified':
@@ -14354,7 +14352,7 @@ This is an awesome project with new features!
                     document.getElementById('diffModeStatus').textContent = 'Split';
                     break;
             }
-            
+
             // Update button styles
             document.querySelectorAll('#diffModal button').forEach(btn => {
                 if (btn.textContent.includes('Unified') && mode === 'unified' ||
@@ -14362,8 +14360,8 @@ This is an awesome project with new features!
                     btn.textContent.includes('Split') && mode === 'split') {
                     btn.classList.remove('btn-secondary');
                     btn.classList.add('btn');
-                } else if (btn.textContent.includes('Unified') || 
-                          btn.textContent.includes('Side-by-Side') || 
+                } else if (btn.textContent.includes('Unified') ||
+                          btn.textContent.includes('Side-by-Side') ||
                           btn.textContent.includes('Split')) {
                     btn.classList.remove('btn');
                     btn.classList.add('btn-secondary');
@@ -14374,10 +14372,10 @@ This is an awesome project with new features!
         function rewordCommit() {
             // Clear any previous state and ensure clean modal opening
             closeAllModals();
-            
+
             // Set up the reword modal
             document.getElementById('rewordCommitHash').textContent = selectedCommit;
-            
+
             // Get commit message based on selected commit
             const commitMessages = {
                 '18c4a3a': 'fix(ui): 修复侧边栏布局问题，显示分支列表和导航菜单',
@@ -14385,10 +14383,10 @@ This is an awesome project with new features!
                 '5f49518': 'feat(diff_viewer): 添加 Diff 修改块列表和解析函数',
                 '9bd566f': 'fix(tui_enhanced): 修复左侧面板显示问题和 AI commit 相关代码不完整问题'
             };
-            
+
             document.getElementById('newMessage').value = commitMessages[selectedCommit] || 'fix: 修复问题';
             document.getElementById('commitBody').value = '';
-            
+
             document.getElementById('rewordModal').classList.add('active');
         }
 
@@ -14427,38 +14425,38 @@ This is an awesome project with new features!
         function aiEnhance() {
             const messageTextarea = document.querySelector('#rewordModal textarea');
             const originalMessage = messageTextarea.value.trim();
-            
+
             if (!originalMessage) {
                 showCustomAlert('请先输入提交消息后再进行 AI 增强', 'AI 增强', '⚠️');
                 return;
             }
-            
+
             // Show loading state
             const aiButton = document.querySelector('#rewordModal button[onclick="aiEnhance()"]');
             const originalText = aiButton.textContent;
             aiButton.textContent = 'AI 增强中...';
             aiButton.disabled = true;
-            
+
             // Simulate AI enhancement process
             setTimeout(() => {
                 // Generate enhanced commit message suggestions based on original message
                 const enhancements = generateEnhancedCommitSuggestions(originalMessage);
-                
+
                 // Create enhancement modal
                 showEnhancementSuggestions(originalMessage, enhancements);
-                
+
                 // Restore button state
                 aiButton.textContent = originalText;
                 aiButton.disabled = false;
             }, 1500);
         }
-        
+
         function generateEnhancedCommitSuggestions(originalMessage) {
             const suggestions = [];
-            
+
             // Analyze the original message type and provide enhanced versions
             const lowerMessage = originalMessage.toLowerCase();
-            
+
             if (lowerMessage.includes('fix') || lowerMessage.includes('修复')) {
                 suggestions.push({
                     type: 'fix',
@@ -14505,10 +14503,10 @@ This is an awesome project with new features!
                     description: '代码重构格式'
                 });
             }
-            
+
             return suggestions;
         }
-        
+
         function showEnhancementSuggestions(originalMessage, suggestions) {
             // Create enhancement modal HTML
             const enhancementModal = document.createElement('div');
@@ -14527,7 +14525,7 @@ This is an awesome project with new features!
                                 ${originalMessage}
                             </div>
                         </div>
-                        
+
                         <label style="font-weight: bold; color: #64b5f6;">AI 增强建议:</label>
                         <div class="enhancement-suggestions" style="margin-top: 10px;">
                             ${suggestions.map((suggestion, index) => `
@@ -14565,9 +14563,9 @@ This is an awesome project with new features!
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(enhancementModal);
-            
+
             // Store suggestions for later use
             window.enhancementData = {
                 originalMessage,
@@ -14575,40 +14573,40 @@ This is an awesome project with new features!
                 selectedIndex: -1
             };
         }
-        
+
         function selectEnhancement(index) {
             // Remove previous selection
             document.querySelectorAll('.enhancement-item').forEach(item => {
                 item.style.border = '1px solid #404040';
             });
-            
+
             // Highlight selected
             const selectedItem = document.querySelectorAll('.enhancement-item')[index];
             selectedItem.style.border = '2px solid #64b5f6';
-            
+
             // Show use selected button
             document.getElementById('useSelectedBtn').style.display = 'inline-block';
-            
+
             // Store selected index
             window.enhancementData.selectedIndex = index;
         }
-        
+
         function useSelectedEnhancement() {
             if (window.enhancementData && window.enhancementData.selectedIndex >= 0) {
                 const selectedSuggestion = window.enhancementData.suggestions[window.enhancementData.selectedIndex];
                 const messageTextarea = document.querySelector('#rewordModal textarea');
                 messageTextarea.value = selectedSuggestion.message;
-                
+
                 closeEnhancementModal();
                 showCustomAlert(`已应用 AI 增强建议<br><strong>${selectedSuggestion.type}</strong> 类型格式`, 'AI 增强', '✅');
             }
         }
-        
+
         function useOriginalMessage() {
             closeEnhancementModal();
             showCustomAlert('已保持原始提交消息', 'AI 增强', '💬');
         }
-        
+
         function closeEnhancementModal() {
             const modal = document.getElementById('enhancementModal');
             if (modal) {
@@ -14631,7 +14629,7 @@ This is an awesome project with new features!
             document.getElementById('aiEditActions').style.display = 'none';
             document.getElementById('aiCommitMessage').value = '';
             selectedAISuggestion = null;
-            
+
             // Clear selections
             document.querySelectorAll('.ai-suggestion-item').forEach(item => {
                 item.classList.remove('selected');
@@ -14642,16 +14640,16 @@ This is an awesome project with new features!
             const progress = document.getElementById('aiProgress');
             const suggestions = document.getElementById('aiSuggestions');
             const progressFill = document.getElementById('progressFill');
-            
+
             progress.style.display = 'block';
             suggestions.style.display = 'none';
-            
+
             // Simulate progress
             let width = 0;
             const interval = setInterval(() => {
                 width += 10;
                 progressFill.style.width = width + '%';
-                
+
                 if (width >= 100) {
                     clearInterval(interval);
                     progress.style.display = 'none';
@@ -14665,10 +14663,10 @@ This is an awesome project with new features!
             document.querySelectorAll('.ai-suggestion-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            
+
             element.classList.add('selected');
             selectedAISuggestion = index;
-            
+
             // Show action buttons
             document.getElementById('aiCommitActions').style.display = 'flex';
             document.getElementById('aiCommitActions').style.gap = '8px';
@@ -14678,15 +14676,15 @@ This is an awesome project with new features!
             if (selectedAISuggestion) {
                 const selectedElement = document.querySelector('.ai-suggestion-item.selected');
                 const title = selectedElement.querySelector('.ai-suggestion-title').textContent;
-                
+
                 // Extract just the commit message part (remove number and star)
                 const commitMessage = title.replace(/^\d+\.\s*/, '').replace(/\s*⭐$/, '');
-                
+
                 // Show edit area and populate message
                 document.getElementById('editAICommit').style.display = 'block';
                 document.getElementById('aiCommitMessage').value = commitMessage;
                 document.getElementById('aiCommitMessage').focus();
-                
+
                 // Switch button groups
                 document.getElementById('aiCommitActions').style.display = 'none';
                 document.getElementById('aiEditActions').style.display = 'flex';
@@ -14708,7 +14706,7 @@ This is an awesome project with new features!
             // Hide edit area
             document.getElementById('editAICommit').style.display = 'none';
             document.getElementById('aiCommitMessage').value = '';
-            
+
             // Switch back to suggestion actions
             document.getElementById('aiEditActions').style.display = 'none';
             document.getElementById('aiCommitActions').style.display = 'flex';
@@ -14721,11 +14719,11 @@ This is an awesome project with new features!
             document.querySelectorAll('.ai-suggestion-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            
+
             // Hide actions and restart generation
             document.getElementById('aiCommitActions').style.display = 'none';
             document.getElementById('editAICommit').style.display = 'none';
-            
+
             // Restart generation process
             generateAICommit();
         }
@@ -14735,7 +14733,7 @@ This is an awesome project with new features!
                 const selectedElement = document.querySelector('.ai-suggestion-item.selected');
                 const title = selectedElement.querySelector('.ai-suggestion-title').textContent;
                 const commitMessage = title.replace(/^\d+\.\s*/, '').replace(/\s*⭐$/, '');
-                
+
                 showCustomAlert(`已使用 AI 建议：<br><strong>"${commitMessage}"</strong>`, 'AI 提交', '🤖');
                 closeAIModal();
             }
@@ -14748,7 +14746,7 @@ This is an awesome project with new features!
                 showCustomAlert('没有已暂存的文件可以提交！<br>请先暂存一些文件。', '提交错误', '⚠️');
                 return;
             }
-            
+
             updateCommitFilesList();
             document.getElementById('commitModal').classList.add('active');
             document.getElementById('commitMessage').focus();
@@ -14857,15 +14855,15 @@ This is an awesome project with new features!
                 showCustomAlert('提交消息不能为空！<br>请输入有效的提交消息。', '提交错误', '⚠️');
                 return;
             }
-            
+
             const pushAfter = document.getElementById('pushAfterCommit').checked;
-            
+
             if (pushAfter) {
                 showCustomAlert(`提交已创建！<br><strong>"${message}"</strong><br><br>正在推送到远程仓库...`, '提交成功', '🚀');
             } else {
                 showCustomAlert(`提交已创建！<br><strong>"${message}"</strong>`, '提交成功', '✅');
             }
-            
+
             closeCommitModal();
             // In real implementation, this would execute git commit
             refreshFileStatus();
@@ -14874,12 +14872,12 @@ This is an awesome project with new features!
         function updateCommitFilesList() {
             const stagedFiles = document.querySelectorAll('#stagedFiles .file-item');
             const commitFilesList = document.getElementById('commitFilesList');
-            
+
             commitFilesList.innerHTML = '';
             stagedFiles.forEach(file => {
                 const filePath = file.querySelector('.file-path').textContent;
                 const fileStatus = file.querySelector('.file-status').textContent;
-                
+
                 const fileItem = document.createElement('div');
                 fileItem.className = 'commit-file-item';
                 fileItem.innerHTML = `
@@ -14895,21 +14893,21 @@ This is an awesome project with new features!
             isStashMode = !isStashMode;
             const button = event.target;
             button.textContent = isStashMode ? 'Switch to Git Log' : 'Switch to Stash';
-            
+
             const title = document.querySelector('#stashView h3');
             title.textContent = isStashMode ? 'Stash Management' : 'Git Log';
-            
+
             // Toggle display between stash files and git log
             const stashFiles = document.getElementById('stashFiles');
             const gitLog = document.getElementById('gitLog');
             const selectedCommitDetails = document.getElementById('selectedCommitDetails');
-            
+
             if (isStashMode) {
                 // Show stash files, hide git log
                 stashFiles.style.display = 'block';
                 gitLog.style.display = 'none';
                 selectedCommitDetails.style.display = 'none';
-                
+
                 // Initialize first stash selection
                 selectedStashIndex = 0;
                 if (currentView === 'stash') {
@@ -14920,14 +14918,14 @@ This is an awesome project with new features!
                 // Show git log, hide stash files
                 stashFiles.style.display = 'none';
                 gitLog.style.display = 'block';
-                
+
                 // Initialize first commit selection when switching to git log mode
                 selectedCommitIndex = 0;
                 if (currentView === 'stash') {
                     updateDynamicList('stash');
                 }
                 updateCommitDetails(0, '18c4a3a');
-                
+
                 // Remove stash details when switching back to git log
                 const stashDetails = document.querySelector('.stash-details');
                 if (stashDetails) {
@@ -14940,7 +14938,7 @@ This is an awesome project with new features!
             const syncStatus = document.getElementById('syncStatus');
             syncStatus.classList.add('refreshing');
             syncStatus.querySelector('.status-text').textContent = 'Refreshing...';
-            
+
             setTimeout(() => {
                 syncStatus.classList.remove('refreshing');
                 syncStatus.querySelector('.status-text').textContent = 'Ready';
@@ -14958,17 +14956,17 @@ This is an awesome project with new features!
         function selectBranch(index, branchName) {
             selectedBranchIndex = index;
             document.getElementById('selectedBranch').textContent = (index === 0 ? '★ ' : '') + branchName;
-            
+
             // 更新当前视图的侧边栏
             updateDynamicList(currentView);
-            
+
             // 如果在 branches 视图，更新分支详情和右侧Git Log
             if (currentView === 'branches') {
                 updateBranchDetails(index, branchName);
                 // 确保焦点指示器正确更新
                 updateBranchesVisuialFocus();
             }
-            
+
             // 如果在 git-log 视图，更新主Git Log内容以显示选中分支的提交
             if (currentView === 'git-log') {
                 updateMainGitLogForBranch(index, branchName);
@@ -15005,11 +15003,11 @@ This is an awesome project with new features!
             });
             document.querySelector(`#tagsGitLog .commit-item[data-hash="${commitHash}"]`).classList.add('selected');
             selectedCommit = commitHash;
-            
+
             // Update the selectedTagCommitIndex
             const commits = ['18c4a3a', '8502563', '5f49518', '9bd566f'];
             selectedTagCommitIndex = commits.indexOf(commitHash);
-            
+
             // Update global selected commit for diff viewer
             updateGlobalSelectedCommit(commitHash);
         }
@@ -15021,11 +15019,11 @@ This is an awesome project with new features!
             });
             document.querySelector(`#remotesGitLog .commit-item[data-hash="${commitHash}"]`).classList.add('selected');
             selectedCommit = commitHash;
-            
+
             // Update the selectedRemoteCommitIndex
             const commits = ['18c4a3a', '8502563', '5f49518', '9bd566f'];
             selectedRemoteCommitIndex = commits.indexOf(commitHash);
-            
+
             // Update global selected commit for diff viewer
             updateGlobalSelectedCommit(commitHash);
         }
@@ -15049,11 +15047,11 @@ This is an awesome project with new features!
             });
             document.querySelector(`#branchesGitLog .commit-item[data-hash="${commitHash}"]`).classList.add('selected');
             selectedCommit = commitHash;
-            
+
             // Update the selectedBranchCommitIndex
             const currentCommits = AppData.getBranchCommits(selectedBranchIndex);
             selectedBranchCommitIndex = currentCommits.findIndex(commit => commit.hash === commitHash);
-            
+
             // Update global selected commit for diff viewer
             updateGlobalSelectedCommit(commitHash);
         }
@@ -15087,21 +15085,21 @@ This is an awesome project with new features!
             branchesFocusOnGitLog = !branchesFocusOnGitLog;
             updateBranchesVisuialFocus();
         }
-        
+
         // Stash view focus management
         let stashFocusOnFileList = true; // Default focus on file list in stash mode
-        
+
         function toggleStashFocus() {
             // 在 stash 列表和文件列表之间切换焦点
             stashFocusOnFileList = !stashFocusOnFileList;
             updateStashVisualFocus();
         }
-        
+
         function updateStashVisualFocus() {
             // 更新可视的焦点指示器
             const sidebar = document.getElementById('dynamicList');
             const fileListArea = document.getElementById('stashFiles');
-            
+
             if (stashFocusOnFileList) {
                 // 焦点在文件列表区域
                 sidebar.style.opacity = '0.5';
@@ -15124,7 +15122,7 @@ This is an awesome project with new features!
             const sidebar = document.getElementById('dynamicList');
             const gitLogArea = document.getElementById('branchesGitLog');
             const focusHint = document.getElementById('branchesFocusHint');
-            
+
             if (branchesFocusOnGitLog) {
                 // 焦点在Git Log区域
                 sidebar.style.opacity = '0.5';
@@ -15144,7 +15142,7 @@ This is an awesome project with new features!
             }
         }
 
-        // Tag Git Log Functions  
+        // Tag Git Log Functions
         function editTagCommit(commitHash) {
             selectedCommit = commitHash;
             document.getElementById('selectedCommitHash').textContent = commitHash;
@@ -15170,14 +15168,14 @@ This is an awesome project with new features!
                 item.classList.remove('selected');
             });
             document.querySelector(`#gitLog .commit-item[data-hash="${commitHash}"]`).classList.add('selected');
-            
+
             // Update global selected commit
             selectedCommit = commitHash;
             document.getElementById('selectedCommitHash').textContent = commitHash;
-            
+
             // Update commit details in the sidebar
             updateMainCommitDetails(commitHash);
-            
+
             // Also update the sidebar selection to keep it in sync
             const commitHashes = ['18c4a3a', '8502563', '5f49518'];
             const index = commitHashes.indexOf(commitHash);
@@ -15216,16 +15214,16 @@ This is an awesome project with new features!
                     branch: 'main'
                 }
             };
-            
+
             const details = commitDetails[commitHash] || commitDetails['18c4a3a'];
-            
+
             // Update the commit details section in stash view (below Git Log)
             const detailsDiv = document.getElementById('selectedCommitDetails');
             if (detailsDiv) {
                 // Update the existing details div
                 detailsDiv.style.display = 'block';
             }
-            
+
             // Update all detail fields
             document.getElementById('selectedCommitHash').textContent = details.hash;
             document.getElementById('detailCommitHash').textContent = details.hash;
@@ -15313,7 +15311,7 @@ This is an awesome project with new features!
             };
 
             const details = branchDetails[index] || branchDetails[0];
-            
+
             // 更新分支详情显示
             const branchView = document.getElementById('branchesView');
             const detailsSection = branchView.querySelector('div[style*="background: #252526"]');
@@ -15330,7 +15328,7 @@ This is an awesome project with new features!
                     </div>
                 </div>
             `;
-            
+
             // 更新分支对应的 Git Log
             updateBranchGitLog(index, branchName);
         }
@@ -15344,18 +15342,18 @@ This is an awesome project with new features!
             // 使用统一数据管理获取分支提交历史
             const commits = AppData.getBranchCommits(index);
             const gitLogContainer = document.getElementById('branchesGitLog');
-            
+
             // 更新Git Log内容 - 使用安全的DOM操作替代HTML拼接
             gitLogContainer.innerHTML = '';
             commits.forEach((commit, commitIndex) => {
                 const commitElement = document.createElement('div');
                 commitElement.className = `commit-item ${commitIndex === 0 ? 'selected' : ''}`;
                 commitElement.setAttribute('data-hash', commit.hash);
-                
+
                 // 使用事件管理器替代原生addEventListener
                 EventManager.addEventListener(commitElement, 'click', () => selectBranchCommit(commit.hash));
                 EventManager.addEventListener(commitElement, 'dblclick', () => showBranchCommitDiff(commit.hash));
-                
+
                 // 安全地设置内容
                 commitElement.innerHTML = `
                     <span class="commit-status">${escapeHtml(commit.status)}</span>
@@ -15363,11 +15361,11 @@ This is an awesome project with new features!
                     <span class="commit-date">${escapeHtml(commit.date)}</span>
                     <span class="commit-message">${escapeHtml(commit.message)}</span>
                 `;
-                
+
                 // 创建按钮容器
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'commit-actions';
-                
+
                 // 创建按钮并使用事件监听器
                 const buttons = [
                     { text: '👁️', title: 'Show Diff', handler: () => showBranchCommitDiff(commit.hash) },
@@ -15375,7 +15373,7 @@ This is an awesome project with new features!
                     { text: '🔄', title: 'Reset', handler: () => resetBranchCommit(commit.hash) },
                     { text: '🍒', title: 'Cherry Pick', handler: () => cherryPickBranchCommit(commit.hash) }
                 ];
-                
+
                 buttons.forEach(btn => {
                     const button = document.createElement('button');
                     button.className = 'btn btn-secondary';
@@ -15387,11 +15385,11 @@ This is an awesome project with new features!
                     });
                     actionsDiv.appendChild(button);
                 });
-                
+
                 commitElement.appendChild(actionsDiv);
                 gitLogContainer.appendChild(commitElement);
             });
-            
+
             // 更新全局选中的commit为第一个
             if (commits.length > 0) {
                 selectedCommit = commits[0].hash;
@@ -15432,17 +15430,17 @@ This is an awesome project with new features!
 
             const commits = branchCommits[index] || branchCommits[0];
             const mainGitLogContainer = document.getElementById('gitLog');
-            
+
             // 更新主Git Log内容以显示选中分支的提交 - 使用安全的DOM操作
             mainGitLogContainer.innerHTML = '';
             commits.forEach((commit, commitIndex) => {
                 const commitElement = document.createElement('div');
                 commitElement.className = `commit-item ${commitIndex === 0 ? 'selected' : ''}`;
                 commitElement.setAttribute('data-hash', commit.hash);
-                
+
                 // 使用事件管理器而不是onclick属性
                 EventManager.addEventListener(commitElement, 'click', () => selectMainCommit(commit.hash));
-                
+
                 // 安全地设置内容
                 commitElement.innerHTML = `
                     <span class="commit-status">${escapeHtml(commit.status)}</span>
@@ -15450,10 +15448,10 @@ This is an awesome project with new features!
                     <span class="commit-date">${escapeHtml(commit.date)}</span>
                     <span class="commit-message">${escapeHtml(commit.message)}</span>
                 `;
-                
+
                 mainGitLogContainer.appendChild(commitElement);
             });
-            
+
             // 更新全局选中的commit为第一个
             if (commits.length > 0) {
                 selectedCommit = commits[0].hash;
@@ -15485,7 +15483,7 @@ This is an awesome project with new features!
             };
 
             const details = tagDetails[index] || tagDetails[0];
-            
+
             // 更新标签详情显示
             const tagView = document.getElementById('tagsView');
             const detailsSection = tagView.querySelector('div[style*="background: #252526"]');
@@ -15521,7 +15519,7 @@ This is an awesome project with new features!
                     author: 'alice <alice@helltalk.com>'
                 },
                 2: { // stash@{2}
-                    branch: 'main', 
+                    branch: 'main',
                     date: '2024-09-09 11:20:45',
                     message: 'WIP on main: fix UI layout issues',
                     files: '4 files changed, 12 insertions(+), 5 deletions(-)',
@@ -15530,7 +15528,7 @@ This is an awesome project with new features!
             };
 
             const details = stashDetails[index] || stashDetails[0];
-            
+
             // 更新 stash 详情显示
             const stashView = document.getElementById('stashView');
             // 查找当前的详情区域，如果不存在则创建
@@ -15543,7 +15541,7 @@ This is an awesome project with new features!
                 detailsSection.style.cssText = 'background: #252526; padding: 16px; border-radius: 4px; margin: 16px 0;';
                 header.parentNode.insertBefore(detailsSection, header.nextSibling);
             }
-            
+
             detailsSection.innerHTML = `
                 <div style="margin-bottom: 12px;">
                     <div style="font-weight: bold; color: #4ec9b0;">Selected Stash: <span id="selectedStash">${stashName}</span></div>
@@ -15595,7 +15593,7 @@ This is an awesome project with new features!
             };
 
             const details = commitDetails[index] || commitDetails[0];
-            
+
             // 使用统一的 updateMainCommitDetails 函数来更新详情显示
             // 而不是创建重复的显示区域
             updateMainCommitDetails(details.hash);
@@ -15623,7 +15621,7 @@ This is an awesome project with new features!
             };
 
             const details = remoteDetails[index] || remoteDetails[0];
-            
+
             // 更新 remote 详情显示
             const remotesView = document.getElementById('remotesView');
             // 查找当前的详情区域，如果不存在则创建
@@ -15636,7 +15634,7 @@ This is an awesome project with new features!
                 detailsSection.style.cssText = 'background: #252526; padding: 16px; border-radius: 4px; margin: 16px 0;';
                 header.parentNode.insertBefore(detailsSection, header.nextSibling);
             }
-            
+
             detailsSection.innerHTML = `
                 <div style="margin-bottom: 12px;">
                     <div style="font-weight: bold; color: #4ec9b0;">Selected Remote: <span id="selectedRemote">${remoteName}</span></div>
@@ -15689,7 +15687,7 @@ This is an awesome project with new features!
             };
 
             const details = historyDetails[index] || historyDetails[0];
-            
+
             // 更新搜索历史详情显示
             const historyView = document.getElementById('historyView');
             // 查找当前的详情区域，如果不存在则创建
@@ -15702,7 +15700,7 @@ This is an awesome project with new features!
                 detailsSection.style.cssText = 'background: #252526; padding: 16px; border-radius: 4px; margin: 16px 0;';
                 header.parentNode.insertBefore(detailsSection, header.nextSibling);
             }
-            
+
             detailsSection.innerHTML = `
                 <div style="margin-bottom: 12px;">
                     <div style="font-weight: bold; color: #4ec9b0;">Selected Search: <span id="selectedSearch">${searchTerm}</span></div>
@@ -15745,12 +15743,12 @@ This is an awesome project with new features!
             // 更新左侧分支列表，移动星标
             const branchNames = ['main', 'feature/auth', 'develop', 'hotfix/v1.2'];
             const currentIndex = branchNames.indexOf(currentBranch);
-            
+
             if (currentIndex !== -1) {
                 // 更新全局的当前分支索引
                 currentBranchIndex = currentIndex;
                 // 重新渲染分支列表以显示新的星标位置
-                updateDynamicListSafe('branches');
+                updateDynamicListSafeV2('branches');
                 // 更新分支详情显示
                 updateBranchDetails(currentIndex, currentBranch);
             }
@@ -15767,7 +15765,7 @@ This is an awesome project with new features!
                     // Clear star from all branches since we're not on any branch
                     currentBranchIndex = -1;
                     if (currentView === 'branches') {
-                        updateDynamicListSafe('branches');
+                        updateDynamicListSafeV2('branches');
                     }
                 },
                 '切换标签',
@@ -15781,7 +15779,7 @@ This is an awesome project with new features!
                     showCustomAlert(`已创建新分支: <strong>${branchName}</strong>`, '创建分支', '🌱');
                     // Add to list
                     selectedBranchIndex = 1; // Select the new branch
-                    updateDynamicListSafe('branches');
+                    updateDynamicListSafeV2('branches');
                 }
             }, '创建分支', '🌱', '', '例如: feature/new-feature');
         }
@@ -15808,34 +15806,34 @@ This is an awesome project with new features!
                 updateDynamicList('stash');
             }
         }
-        
+
         // Stash file selection and operations
-        
+
         function selectStashFile(element) {
             // Remove previous selection
             document.querySelectorAll('#stashFilesList .file-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            
+
             // Add selection to clicked element
             element.classList.add('selected');
-            
+
             // Update selected file index
             const allFiles = document.querySelectorAll('#stashFilesList .file-item');
             selectedStashFileIndex = Array.from(allFiles).indexOf(element);
-            
+
             // Update selected file info if needed
             const fileName = element.dataset.file;
             console.log('Selected stash file:', fileName);
         }
-        
+
         function showStashFileDiff(event, filePath) {
             event.stopPropagation();
             showCustomAlert(`正在显示文件差异: <strong>${filePath}</strong><br><br>这里会显示在 stash 中该文件的具体更改内容。`, 'Stash 文件差异', '📋');
             // 在实际实现中，这里会打开 diff modal 显示文件的 stash diff
             showDiff();
         }
-        
+
         function restoreStashFile(event, filePath) {
             event.stopPropagation();
             showCustomConfirm(
@@ -15868,10 +15866,10 @@ This is an awesome project with new features!
             document.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            
+
             // Add selection to clicked element
             element.classList.add('selected');
-            
+
             // Update selected file info if needed
             const fileName = element.dataset.file;
             console.log('Selected file:', fileName);
@@ -15882,11 +15880,11 @@ This is an awesome project with new features!
             const modifiedFiles = document.querySelectorAll('#unstagedFiles .file-item').length;
             const untrackedFiles = document.querySelectorAll('#untrackedFiles .file-item').length;
             const stagedFiles = document.querySelectorAll('#stagedFiles .file-item:not([style*="italic"])').length;
-            
+
             document.getElementById('modifiedCount').textContent = modifiedFiles;
             document.getElementById('untrackedCount').textContent = untrackedFiles;
             document.getElementById('stagedCount').textContent = stagedFiles;
-            
+
             // Update section headers
             document.querySelector('#stagedSection h4 span:last-child').textContent = `(${stagedFiles})`;
             document.querySelector('[data-section="unstaged"] span:last-child').textContent = `(${modifiedFiles})`;
@@ -15900,13 +15898,13 @@ This is an awesome project with new features!
                     // Move all untracked files to staged
                     const untrackedFiles = document.querySelectorAll('#untrackedFiles .file-item');
                     const stagedContainer = document.getElementById('stagedFiles');
-                    
+
                     // Clear "No changes staged" message if it exists
                     const noChangesMsg = stagedContainer.querySelector('[style*="italic"]');
                     if (noChangesMsg) {
                         noChangesMsg.remove();
                     }
-                    
+
                     untrackedFiles.forEach(fileItem => {
                         // Clone and modify for staged area
                         const stagedItem = fileItem.cloneNode(true);
@@ -15915,17 +15913,17 @@ This is an awesome project with new features!
                         stagedItem.querySelector('.file-status-icon').style.color = '#4ec9b0';
                         stagedItem.querySelector('.file-stats').textContent = 'added';
                         stagedItem.querySelector('.file-stats').style.color = '#4ec9b0';
-                        
+
                         // Update actions for staged file
                         stagedItem.querySelector('.file-actions').innerHTML = `
                             <button class="btn-small" onclick="unstageFile(event, '${fileItem.dataset.file}')">Unstage</button>
                             <button class="btn-small" onclick="showFileDiff(event, '${fileItem.dataset.file}')">Diff</button>
                         `;
-                        
+
                         stagedContainer.appendChild(stagedItem);
                         fileItem.remove();
                     });
-                    
+
                     updateStatusCounts();
                     showCustomAlert('已将所有未跟踪文件添加到暂存区', '✅ Files Staged');
                 },
@@ -15937,7 +15935,7 @@ This is an awesome project with new features!
         function refreshStatusView() {
             // Simulate refreshing git status
             showCustomAlert('Git status refreshed', '🔄 Refresh Complete');
-            
+
             // In a real implementation, this would fetch actual git status
             // For demo purposes, we'll just show a refresh message
             updateStatusCounts();
@@ -15946,35 +15944,35 @@ This is an awesome project with new features!
         // Enhanced file operations with better feedback
         function stageFile(event, fileName) {
             event.stopPropagation();
-            
+
             showCustomConfirm(
                 `Stage changes in <strong>${fileName}</strong>?`,
                 () => {
                     // Move file from unstaged to staged section
                     const fileItem = document.querySelector(`[data-file="${fileName}"]`);
                     const stagedContainer = document.getElementById('stagedFiles');
-                    
+
                     // Clear "No changes staged" message if it exists
                     const noChangesMsg = stagedContainer.querySelector('[style*="italic"]');
                     if (noChangesMsg) {
                         noChangesMsg.remove();
                     }
-                    
+
                     // Clone and modify for staged area
                     const stagedItem = fileItem.cloneNode(true);
                     stagedItem.className = 'file-item staged';
                     stagedItem.querySelector('.file-status-icon').style.color = '#4ec9b0';
                     stagedItem.querySelector('.file-stats').style.color = '#4ec9b0';
-                    
+
                     // Update actions for staged file
                     stagedItem.querySelector('.file-actions').innerHTML = `
                         <button class="btn-small" onclick="unstageFile(event, '${fileName}')">Unstage</button>
                         <button class="btn-small" onclick="showFileDiff(event, '${fileName}')">Diff</button>
                     `;
-                    
+
                     stagedContainer.appendChild(stagedItem);
                     fileItem.remove();
-                    
+
                     updateStatusCounts();
                     showCustomAlert(`Staged <strong>${fileName}</strong>`, '✅ File Staged');
                 },
@@ -15985,30 +15983,30 @@ This is an awesome project with new features!
 
         function unstageFile(event, fileName) {
             event.stopPropagation();
-            
+
             showCustomConfirm(
                 `Unstage changes in <strong>${fileName}</strong>?`,
                 () => {
                     // Move file from staged back to unstaged section
                     const fileItem = document.querySelector(`#stagedFiles [data-file="${fileName}"]`);
                     const unstagedContainer = document.getElementById('unstagedFiles');
-                    
+
                     // Clone and modify for unstaged area
                     const unstagedItem = fileItem.cloneNode(true);
                     unstagedItem.className = 'file-item unstaged';
                     unstagedItem.querySelector('.file-status-icon').style.color = '#f14c4c';
                     unstagedItem.querySelector('.file-stats').style.color = '#569cd6';
-                    
+
                     // Update actions for unstaged file
                     unstagedItem.querySelector('.file-actions').innerHTML = `
                         <button class="btn-small" onclick="stageFile(event, '${fileName}')">Stage</button>
                         <button class="btn-small" onclick="showFileDiff(event, '${fileName}')">Diff</button>
                         <button class="btn-small btn-danger" onclick="discardFile(event, '${fileName}')">Restore</button>
                     `;
-                    
+
                     unstagedContainer.appendChild(unstagedItem);
                     fileItem.remove();
-                    
+
                     // Show "no changes staged" if staged area is empty
                     const stagedContainer = document.getElementById('stagedFiles');
                     if (stagedContainer.children.length === 0) {
@@ -16018,7 +16016,7 @@ This is an awesome project with new features!
                             </div>
                         `;
                     }
-                    
+
                     updateStatusCounts();
                     showCustomAlert(`Unstaged <strong>${fileName}</strong>`, '🔄 File Unstaged');
                 },
@@ -16159,7 +16157,7 @@ This is an awesome project with new features!
          */
         function testModalSystem() {
             let step = 1;
-            
+
             // Step 1: 测试Alert弹窗
             showCustomAlert(
                 `🎉 欢迎使用统一弹窗系统！<br><br>` +
@@ -16170,7 +16168,7 @@ This is an awesome project with new features!
                 '弹窗系统测试 (1/3)',
                 '🧪'
             );
-            
+
             // 劫持Alert的确定按钮来继续测试
             setTimeout(() => {
                 const alertOkBtn = document.querySelector('#customAlertModal .btn-primary');
@@ -16178,7 +16176,7 @@ This is an awesome project with new features!
                     const originalOnClick = alertOkBtn.onclick;
                     alertOkBtn.onclick = function() {
                         originalOnClick && originalOnClick();
-                        
+
                         // Step 2: 测试Confirm弹窗
                         setTimeout(() => {
                             showCustomConfirm(
@@ -16239,7 +16237,7 @@ This is an awesome project with new features!
                 () => {
                     showCustomAlert(`已删除分支: <strong>${branch}</strong>`, '删除分支', '🗑️');
                     selectedBranchIndex = 0;
-                    updateDynamicListSafe('branches');
+                    updateDynamicListSafeV2('branches');
                 },
                 '删除分支',
                 '🗑️'
@@ -16286,18 +16284,18 @@ This is an awesome project with new features!
             document.querySelectorAll('.diff-mode-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            
+
             // 激活当前模式按钮
             const activeBtn = document.querySelector(`[data-mode="${mode}"]`);
             if (activeBtn) {
                 activeBtn.classList.add('active');
             }
-            
+
             // 隐藏所有视图
             document.querySelectorAll('#unifiedView, #sideBySideView, #splitView').forEach(view => {
                 view.style.display = 'none';
             });
-            
+
             // 显示选择的视图
             let targetView;
             switch(mode) {
@@ -16311,17 +16309,17 @@ This is an awesome project with new features!
                     targetView = document.getElementById('splitView');
                     break;
             }
-            
+
             if (targetView) {
                 targetView.style.display = 'block';
             }
-            
+
             // 更新状态显示
             const diffModeStatus = document.getElementById('diffModeStatus');
             if (diffModeStatus) {
                 diffModeStatus.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
             }
-            
+
             // 可访问性公告
             if (window.AccessibilityManager) {
                 AccessibilityManager.announce(`Switched to ${mode} diff view`);
@@ -16337,17 +16335,17 @@ This is an awesome project with new features!
             if (currentFileSpan) {
                 const currentText = currentFileSpan.textContent;
                 const match = currentText.match(/(\d+) of (\d+)/);
-                
+
                 if (match) {
                     let current = parseInt(match[1]);
                     const total = parseInt(match[2]);
-                    
+
                     current += direction;
                     if (current < 1) current = total;
                     if (current > total) current = 1;
-                    
+
                     currentFileSpan.textContent = `${current} of ${total}`;
-                    
+
                     // 可访问性公告
                     if (window.AccessibilityManager) {
                         AccessibilityManager.announce(`File ${current} of ${total}`);
@@ -16375,7 +16373,7 @@ This is an awesome project with new features!
             const diffModal = DOMUtils.getElementById('diffModal');
             if (diffModal) {
                 DOMUtils.safeRemoveClass(diffModal, 'active');
-                
+
                 // 可访问性公告
                 if (window.AccessibilityManager) {
                     AccessibilityManager.announce('Diff viewer closed');
@@ -16388,7 +16386,7 @@ This is an awesome project with new features!
          */
         window.addEventListener('error', (event) => {
             console.error('Global error caught:', event.error);
-            
+
             // 可访问性错误公告
             if (window.AccessibilityManager) {
                 AccessibilityManager.announce('An error occurred', 'alerts');
@@ -16401,7 +16399,7 @@ This is an awesome project with new features!
         window.addEventListener('unhandledrejection', (event) => {
             console.error('Unhandled promise rejection:', event.reason);
             event.preventDefault();
-            
+
             // 可访问性错误公告
             if (window.AccessibilityManager) {
                 AccessibilityManager.announce('A system error occurred', 'alerts');

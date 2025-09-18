@@ -11,6 +11,7 @@ use ratatui::{
 };
 
 use crate::{
+    ai::AgentStatus,
     app::state::{AppState, FocusArea},
     error::AppResult,
     ui::{components::Component, theme::Theme},
@@ -40,6 +41,7 @@ impl Component for SidebarComponent {
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(6), // Repository info
+                Constraint::Length(8), // Agent system status
                 Constraint::Min(0),    // Dynamic content based on current tab
             ])
             .split(area);
@@ -47,8 +49,11 @@ impl Component for SidebarComponent {
         // Repository section
         self.render_repository_info(frame, sections[0], state, theme);
 
+        // Agent system status section
+        self.render_agent_status(frame, sections[1], state, theme);
+
         // Dynamic content section based on current tab
-        self.render_dynamic_content(frame, sections[1], state, theme);
+        self.render_dynamic_content(frame, sections[2], state, theme);
     }
 
     fn handle_key_event(&mut self, _key: KeyEvent, _state: &mut AppState) -> AppResult<()> {
@@ -123,6 +128,7 @@ impl SidebarComponent {
             TabType::Stash => self.render_stash_list(frame, area, state, theme),
             TabType::Status => self.render_status_list(frame, area, state, theme),
             TabType::Remotes => self.render_remotes_list(frame, area, state, theme),
+            TabType::History => self.render_history_list(frame, area, state, theme),
             TabType::GitFlow => self.render_gitflow_list(frame, area, state, theme),
         }
     }
@@ -609,6 +615,82 @@ impl SidebarComponent {
             .highlight_symbol(">> ");
 
         frame.render_stateful_widget(list, area, &mut list_state);
+    }
+
+    fn render_history_list(&self, frame: &mut Frame, area: Rect, state: &AppState, theme: &Theme) {
+        // Mock commit history data for now
+        let history_items = vec![
+            ListItem::new("abc123 feat: Add new feature"),
+            ListItem::new("def456 fix: Fix critical bug"),
+            ListItem::new("ghi789 docs: Update README"),
+            ListItem::new("jkl012 refactor: Improve performance"),
+            ListItem::new("mno345 test: Add unit tests"),
+        ];
+
+        let is_focused = state.ui_state.current_focus == FocusArea::Sidebar;
+        let title = if is_focused { "History [FOCUSED]" } else { "History [Space to focus]" };
+
+        let mut list_state = ratatui::widgets::ListState::default();
+        list_state.select(Some(state.ui_state.sidebar_selected_index));
+
+        let list = List::new(history_items)
+            .block(
+                Block::default()
+                    .title(title)
+                    .borders(Borders::ALL)
+                    .border_style(if is_focused { Style::default().fg(theme.colors.accent) } else { theme.border_style() }),
+            )
+            .style(Style::default().bg(theme.colors.secondary).fg(theme.colors.foreground))
+            .highlight_style(theme.highlight_style())
+            .highlight_symbol(">> ");
+
+        frame.render_stateful_widget(list, area, &mut list_state);
+    }
+
+    fn render_agent_status(
+        &self,
+        frame: &mut Frame,
+        area: Rect,
+        state: &AppState,
+        theme: &Theme,
+    ) {
+        let agent_count = state.agent_state.agents.len();
+        let running_agents = state.agent_state.agents.values()
+            .filter(|agent| agent.status == AgentStatus::Running)
+            .count();
+        let idle_agents = state.agent_state.agents.values()
+            .filter(|agent| agent.status == AgentStatus::Idle)
+            .count();
+        let failed_agents = state.agent_state.agents.values()
+            .filter(|agent| agent.status == AgentStatus::Failed)
+            .count();
+
+        let agent_info = vec![
+            format!("🤖 Agents: {}", agent_count),
+            format!("⚡ Running: {}", running_agents),
+            format!("✓ Idle: {}", idle_agents),
+            format!("✗ Failed: {}", failed_agents),
+            format!("💡 Suggestions: {}", state.agent_state.ai_suggestions.len()),
+            format!("📈 Tasks: {}", state.agent_state.agents.values()
+                .map(|a| a.tasks_completed)
+                .sum::<usize>()),
+        ];
+
+        let items: Vec<ListItem> = agent_info
+            .into_iter()
+            .map(|info| ListItem::new(info).style(theme.text_style()))
+            .collect();
+
+        let list = List::new(items)
+            .block(
+                Block::default()
+                    .title("AI Agent System")
+                    .borders(Borders::ALL)
+                    .border_style(theme.border_style()),
+            )
+            .style(Style::default().bg(theme.colors.secondary).fg(theme.colors.foreground));
+
+        frame.render_widget(list, area);
     }
 
     fn render_empty_list(&self, frame: &mut Frame, area: Rect, theme: &Theme) {

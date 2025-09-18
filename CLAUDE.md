@@ -20,42 +20,47 @@ The project documentation is organized as follows:
 
 ## Development Commands
 
-This is a documentation-first project that is not yet implemented. The following commands are based on the planned Rust project structure:
+The project includes a comprehensive Makefile with development commands. Use `make help` to see all available commands.
+
+### Essential Commands
 
 ```bash
-# Build the project
-cargo build
+# Quick development cycle
+make help           # Show all available commands
+make build          # Build project (debug)
+make run            # Run the application
+make test           # Run all tests
+make clean          # Clean build artifacts
 
-# Run the application
-cargo run
+# Code quality
+make fmt            # Format code with rustfmt
+make clippy         # Run clippy linting
+make check          # Quick code check without building
+make pre-commit     # Run format, clippy, and tests
 
-# Run tests
-cargo test
+# Testing options
+make test-unit      # Run unit tests only
+make test-core      # Run core functionality tests
+make test-minimal   # Run minimal test suite
+make test-watch     # Watch files and auto-run tests
 
-# Run specific test module
+# Documentation and analysis
+make doc            # Generate documentation
+make coverage       # Generate test coverage report
+make size           # Show binary size analysis
+make lines          # Count lines of code
+```
+
+### Direct Cargo Commands
+
+```bash
+# Standard Rust commands also work
+cargo build --release
 cargo test git_tests
-cargo test agent_tests
-cargo test mcp_tests
-
-# Lint code
+cargo test commit_agent_tests
 cargo clippy -- -D warnings
-
-# Format code
 cargo fmt
-
-# Check code without building
 cargo check
-
-# Run benchmarks
-cargo bench
-
-# Run integration tests specifically
-cargo test --test integration
-
-# Cross-platform builds (when implemented)
-cargo build --target x86_64-pc-windows-gnu
-cargo build --target x86_64-apple-darwin
-cargo build --target x86_64-unknown-linux-gnu
 ```
 
 ## High-Level Architecture
@@ -113,14 +118,16 @@ Model Context Protocol support enables external AI service integration:
 
 ## Critical Development Notes
 
-### File Structure Priorities
+### Actual File Structure
 
-- `src/app/`: Application core with state management
-- `src/ui/components/`: Six main tab components matching demo layout
-- `src/git/`: Git operations with workflow management
-- `src/ai/`: Agent system with MCP protocol support
-- `src/ai/agents/`: Individual agent implementations
-- `src/ai/mcp/`: MCP protocol client/server implementation
+Current implementation structure:
+
+- `src/app/`: Application core with state management and event handling
+- `src/ui/`: Terminal user interface components built with ratatui
+- `src/git/`: Git operations service with caching and performance optimization
+- `src/ai/`: Agent system with message bus architecture
+- `src/config/`: Configuration management with TOML support
+- `tests/`: Comprehensive test suite including unit, integration, and agent tests
 
 ### Performance Requirements
 
@@ -133,11 +140,13 @@ Model Context Protocol support enables external AI service integration:
 
 ### Testing Strategy
 
-- Unit test coverage: ≥80% overall, ≥95% for core modules
-- Agent system testing with mock frameworks
-- MCP protocol compliance testing
-- Integration tests for Git workflow operations
-- Performance benchmarking for all major operations
+The project includes comprehensive testing infrastructure:
+
+- **Test Files Available**: `git_tests.rs`, `commit_agent_tests.rs`, `ai_client_tests.rs`, `integration_tests.rs`, `core_test.rs`
+- **Coverage Target**: ≥80% overall, ≥95% for core modules
+- **Test Commands**: Use `make test` for all tests, `make test-core` for core functionality
+- **Performance Testing**: `make bench` for benchmarks, `make coverage` for coverage reports
+- **Continuous Testing**: `make test-watch` for development with auto-reload
 
 ### Configuration Management
 
@@ -206,5 +215,22 @@ When adding MCP functionality:
 - Implement proper resource and tool registration
 - Support multiple transport layers (WebSocket preferred)
 - Include protocol version negotiation and error handling
+
+## Quick Start for New Contributors
+
+```bash
+# Setup and first run
+make help           # See all available commands
+make dev-setup      # Install development tools (first time only)
+make build          # Build the project
+make test           # Verify everything works
+make run            # Start the application
+
+# Development workflow
+make check          # Quick code validation
+make test-watch     # Start continuous testing
+# ... make changes ...
+make pre-commit     # Before committing changes
+```
 
 This project emphasizes documentation-driven development with comprehensive verification steps to ensure all features meet the detailed requirements specifications.

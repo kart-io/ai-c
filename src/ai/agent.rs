@@ -49,10 +49,16 @@ pub enum AgentStatus {
     Initializing,
     /// Agent is idle and ready for tasks
     Idle,
+    /// Agent is processing a task (alias for Processing for UI compatibility)
+    Running,
     /// Agent is processing a task
     Processing(String), // Task ID
+    /// Agent encountered an error (alias for Error for UI compatibility)
+    Failed,
     /// Agent encountered an error
     Error(String),
+    /// Agent is stopped (alias for Shutdown for UI compatibility)
+    Stopped,
     /// Agent is shutting down
     Shutting,
     /// Agent has shut down

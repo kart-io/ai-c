@@ -59,6 +59,7 @@ impl StatusBarComponent {
             crate::app::state::TabType::Tags => "↑↓: Navigate | n: New tag | d: Delete",
             crate::app::state::TabType::Stash => "↑↓: Navigate | Enter: Apply | d: Drop | s: Save",
             crate::app::state::TabType::Remotes => "↑↓: Navigate | f: Fetch | p: Push",
+            crate::app::state::TabType::History => "↑↓: Navigate | Enter: View | f: Filter",
             crate::app::state::TabType::GitFlow => "↑↓: Navigate | Enter: Action",
         }
         .to_string()

@@ -13,7 +13,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::Style,
-    widgets::{Block, Borders, Tabs},
+    widgets::{Block, Borders, Tabs, Paragraph},
     Frame,
 };
 use tracing::debug;
@@ -52,24 +52,32 @@ impl UI {
         })
     }
 
-    /// Render the entire UI
+    /// Render the entire UI with four-layer layout: Tabs + Toolbar + Content + Help
     pub fn render(&mut self, frame: &mut Frame, state: &AppState) {
         let size = frame.size();
 
-        // Main layout: Header-Nav + Main-Content (matches tui-demo.html structure)
+        // Four-layer layout: Top tabs + Toolbar + Main content + Help bar
         let main_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3), // Header-Nav (tabs + sync status)
-                Constraint::Min(0),    // Main-Content (sidebar + content area)
+                Constraint::Length(3), // Top navigation tabs (Branches, Tags, etc.)
+                Constraint::Length(3), // Git operations toolbar
+                Constraint::Min(0),    // Main content area
+                Constraint::Length(2), // Bottom help/shortcuts bar
             ])
             .split(size);
 
-        // Render header-nav with navigation tabs and status
-        self.render_header_nav(frame, main_chunks[0], state);
+        // Render top navigation tabs
+        self.render_navigation_tabs(frame, main_chunks[0], state);
 
-        // Render main-content (sidebar + content area)
-        self.render_main_content(frame, main_chunks[1], state);
+        // Render Git operations toolbar
+        self.render_git_toolbar(frame, main_chunks[1], state);
+
+        // Render main content based on current active tab
+        self.render_tab_content(frame, main_chunks[2], state);
+
+        // Render bottom help bar
+        self.render_help_bar(frame, main_chunks[3], state);
     }
 
     /// Handle key events
@@ -100,8 +108,15 @@ impl UI {
         }
 
         match key.code {
-            // Tab navigation
-            KeyCode::Tab => {
+            // Tab navigation with number keys
+            KeyCode::Char(c @ '1'..='7') if !key.modifiers.contains(KeyModifiers::ALT) => {
+                let tab_index = (c as u8 - b'1') as usize;
+                if tab_index < TabType::all().len() {
+                    state.set_current_tab(TabType::all()[tab_index]);
+                }
+            }
+            // Tab navigation with Tab/Shift+Tab
+            KeyCode::Tab if !key.modifiers.contains(KeyModifiers::SHIFT) => {
                 let current_index = TabType::all()
                     .iter()
                     .position(|&tab| tab == state.current_tab())
@@ -110,7 +125,7 @@ impl UI {
                 let next_index = (current_index + 1) % TabType::all().len();
                 state.set_current_tab(TabType::all()[next_index]);
             }
-            KeyCode::BackTab => {
+            KeyCode::BackTab | KeyCode::Tab if key.modifiers.contains(KeyModifiers::SHIFT) => {
                 let current_index = TabType::all()
                     .iter()
                     .position(|&tab| tab == state.current_tab())
@@ -123,14 +138,53 @@ impl UI {
                 };
                 state.set_current_tab(TabType::all()[prev_index]);
             }
-            // Number keys for direct tab navigation
-            KeyCode::Char(c @ '1'..='6') if !key.modifiers.contains(KeyModifiers::ALT) => {
-                let tab_index = (c as u8 - b'1') as usize;
-                if tab_index < TabType::all().len() {
-                    state.set_current_tab(TabType::all()[tab_index]);
+            // Modern Git client keyboard shortcuts
+            KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::ALT) => {
+                // Alt+C: Checkout branch
+                debug!("Alt+C: Checkout branch requested");
+            }
+            KeyCode::Char('n') if key.modifiers.contains(KeyModifiers::ALT) => {
+                // Alt+N: Create new branch
+                debug!("Alt+N: Create new branch requested");
+            }
+            KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::ALT) => {
+                // Alt+D: Delete branch
+                debug!("Alt+D: Delete branch requested");
+            }
+            KeyCode::Char('m') if key.modifiers.contains(KeyModifiers::ALT) => {
+                // Alt+M: Merge branch
+                debug!("Alt+M: Merge branch requested");
+            }
+            KeyCode::Char('p') if key.modifiers.contains(KeyModifiers::ALT) => {
+                // Alt+P: Push changes
+                debug!("Alt+P: Push changes requested");
+            }
+            KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::ALT) => {
+                // Alt+U: Pull changes
+                debug!("Alt+U: Pull changes requested");
+            }
+            KeyCode::Char('r') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                // Ctrl+R: Refresh
+                debug!("Refresh requested");
+            }
+            // Forward navigation and action keys to the active tab component
+            // Note: Tab key is reserved for tab switching, use Space for panel switching
+            KeyCode::Up | KeyCode::Char('k') |
+            KeyCode::Down | KeyCode::Char('j') |
+            KeyCode::Enter |
+            KeyCode::Char(' ') => {
+                // Forward to the current active tab component
+                match state.current_tab() {
+                    TabType::Branches => self.components.branches_tab.handle_key_event(key, state)?,
+                    TabType::Tags => self.components.tags_tab.handle_key_event(key, state)?,
+                    TabType::Stash => self.components.stash_tab.handle_key_event(key, state)?,
+                    TabType::Status => self.components.status_tab.handle_key_event(key, state)?,
+                    TabType::Remotes => self.components.remotes_tab.handle_key_event(key, state)?,
+                    TabType::History => self.components.history_tab.handle_key_event(key, state)?,
+                    TabType::GitFlow => self.components.gitflow_tab.handle_key_event(key, state)?,
                 }
             }
-            // Forward other keys to the active tab component
+            // Forward other keys to the active component
             _ => {
                 self.components.handle_key_event(key, state)?;
             }
@@ -182,6 +236,14 @@ impl UI {
                 // Mock remotes data
                 vec!["  origin".to_string(), "  upstream".to_string(), "  fork".to_string()]
             }
+            TabType::History => {
+                // Mock commit history
+                vec![
+                    "  abc123 feat: Add new feature".to_string(),
+                    "  def456 fix: Fix critical bug".to_string(),
+                    "  ghi789 docs: Update README".to_string(),
+                ]
+            }
             TabType::GitFlow => {
                 // Git flow information
                 vec![
@@ -195,8 +257,8 @@ impl UI {
         }
     }
 
-    /// Render header-nav with navigation tabs and sync status
-    fn render_header_nav(&self, frame: &mut Frame, area: Rect, state: &AppState) {
+    /// Render top navigation tabs (Branches, Tags, Stash, etc.)
+    fn render_navigation_tabs(&self, frame: &mut Frame, area: Rect, state: &AppState) {
         let tab_titles: Vec<String> = TabType::all()
             .iter()
             .map(|tab| tab.name().to_string())
@@ -207,31 +269,103 @@ impl UI {
             .position(|&tab| tab == state.current_tab())
             .unwrap_or(0);
 
-        // Split header area: tabs on left, sync status on right
+        // Split area: tabs on left, status info on right
         let header_layout = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
-                Constraint::Min(0),     // Tabs area
-                Constraint::Length(30), // Sync status area
+                Constraint::Min(0),      // Tabs area - auto-fit content
+                Constraint::Length(25),  // Status area - fixed width
             ])
             .split(area);
 
         let tabs = Tabs::new(tab_titles)
             .block(
                 Block::default()
-                    .title("AI-Commit TUI")
+                    .title("🌟 AI-Commit TUI")
                     .borders(Borders::ALL)
-                    .border_style(self.theme.border_style())
-                    .title_style(self.theme.text_style()),
+                    .border_style(self.theme.accent_border_style())
+                    .title_style(self.theme.success_style()),
             )
-            .style(Style::default().bg(self.theme.colors.secondary).fg(self.theme.colors.foreground))
+            .style(self.theme.text_style())
             .highlight_style(self.theme.tab_highlight_style())
             .select(current_tab_index);
 
         frame.render_widget(tabs, header_layout[0]);
 
-        // Render sync status in the right area
-        self.render_sync_status(frame, header_layout[1], state);
+        // Render status info in the right area
+        self.render_status_info(frame, header_layout[1], state);
+    }
+
+    /// Render Git operations toolbar (second row)
+    fn render_git_toolbar(&self, frame: &mut Frame, area: Rect, _state: &AppState) {
+        let toolbar_buttons = vec![
+            "Checkout", "Create New", "Delete", "Merge", "Push", "Pull", "Refresh", "Settings"
+        ];
+
+        let button_text = toolbar_buttons.join(" │ ");
+        let toolbar_content = format!(" ⚡ Git Operations: {} ", button_text);
+
+        let toolbar = Paragraph::new(toolbar_content)
+            .block(
+                Block::default()
+                    .title("🔧 Actions")
+                    .borders(Borders::ALL)
+                    .border_style(self.theme.border_style()),
+            )
+            .style(self.theme.text_style())
+            .wrap(ratatui::widgets::Wrap { trim: true });
+
+        frame.render_widget(toolbar, area);
+    }
+
+    /// Render status info (sync status and repository info)
+    fn render_status_info(&self, frame: &mut Frame, area: Rect, state: &AppState) {
+        let status_text = if let Some(branch_info) = &state.git_state.current_branch {
+            format!(
+                " {} ↑{} ↓{} ",
+                branch_info.name,
+                branch_info.ahead,
+                branch_info.behind
+            )
+        } else {
+            " No repo ".to_string()
+        };
+
+        let status = Paragraph::new(status_text)
+            .block(
+                Block::default()
+                    .title("📊 Status")
+                    .borders(Borders::ALL)
+                    .border_style(self.theme.border_style()),
+            )
+            .style(self.theme.status_style());
+
+        frame.render_widget(status, area);
+    }
+
+    /// Render bottom help/shortcuts bar
+    fn render_help_bar(&self, frame: &mut Frame, area: Rect, state: &AppState) {
+        let help_text = match state.current_tab() {
+            TabType::Branches => "↑/↓: Select branch | Space: Switch panel | Enter: Checkout | 1-7: Switch tabs",
+            TabType::Tags => "↑/↓: Select tag | Space: Switch panel | Enter: View tag | 1-7: Switch tabs",
+            TabType::Stash => "↑/↓: Select stash | Space: Switch panel | Enter: Apply | 1-7: Switch tabs",
+            TabType::Status => "↑/↓: Select file | Space: Switch panel | Enter: Stage | 1-7: Switch tabs",
+            TabType::Remotes => "↑/↓: Select remote | Space: Switch panel | Enter: Fetch | 1-7: Switch tabs",
+            TabType::History => "↑/↓: Select commit | Space: Switch panel | Enter: View | 1-7: Switch tabs",
+            TabType::GitFlow => "↑/↓: Navigate | Space: Switch panel | Enter: Execute | 1-7: Switch tabs",
+        };
+
+        let help_para = Paragraph::new(help_text)
+            .block(
+                Block::default()
+                    .title("Quick Help")
+                    .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
+                    .border_style(self.theme.border_style()),
+            )
+            .style(self.theme.text_style())
+            .wrap(ratatui::widgets::Wrap { trim: true });
+
+        frame.render_widget(help_para, area);
     }
 
     /// Render main-content (sidebar + content area)
@@ -295,6 +429,11 @@ impl UI {
                     .remotes_tab
                     .render(frame, content_area, state, &self.theme);
             }
+            TabType::History => {
+                self.components
+                    .history_tab
+                    .render(frame, content_area, state, &self.theme);
+            }
             TabType::GitFlow => {
                 self.components
                     .gitflow_tab
@@ -320,12 +459,235 @@ impl UI {
         let sync_status = ratatui::widgets::Paragraph::new(status_text)
             .block(
                 Block::default()
+                    .title("Status")
                     .borders(Borders::ALL)
-                    .border_style(self.theme.border_style()),
+                    .border_style(self.theme.border_style())
+                    .title_style(self.theme.text_style()),
             )
             .style(self.theme.status_style());
 
         frame.render_widget(sync_status, area);
+    }
+
+    /// Render left sidebar with file tree and branch information
+    fn render_left_sidebar(&self, frame: &mut Frame, area: Rect, state: &AppState) {
+        // Split sidebar into sections: File tree + Branch info
+        let sidebar_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(60), // File tree area
+                Constraint::Percentage(40), // Branch info area
+            ])
+            .split(area);
+
+        // Render file tree section
+        self.render_file_tree_section(frame, sidebar_chunks[0], state);
+
+        // Render branch info section
+        self.render_branch_info_section(frame, sidebar_chunks[1], state);
+    }
+
+    /// Render file tree section (top part of sidebar)
+    fn render_file_tree_section(&self, frame: &mut Frame, area: Rect, state: &AppState) {
+        let files = vec![
+            "📁 src/",
+            "  📄 main.rs",
+            "  📄 lib.rs",
+            "  📁 ui/",
+            "    📄 mod.rs",
+            "    📄 components.rs",
+            "📁 tests/",
+            "📄 Cargo.toml",
+            "📄 README.md",
+        ];
+
+        let file_items: Vec<ratatui::widgets::ListItem> = files
+            .iter()
+            .map(|&file| ratatui::widgets::ListItem::new(file))
+            .collect();
+
+        let file_list = ratatui::widgets::List::new(file_items)
+            .block(
+                Block::default()
+                    .title("📂 Repository Files")
+                    .borders(Borders::ALL)
+                    .border_style(self.theme.border_style()),
+            )
+            .style(self.theme.text_style());
+
+        frame.render_widget(file_list, area);
+    }
+
+    /// Render branch info section (bottom part of sidebar)
+    fn render_branch_info_section(&self, frame: &mut Frame, area: Rect, state: &AppState) {
+        let branches = if let Some(git_service) = &state.git_service {
+            git_service.list_branches().unwrap_or_default()
+        } else {
+            vec![]
+        };
+
+        let branch_items: Vec<ratatui::widgets::ListItem> = branches
+            .iter()
+            .take(5) // Show only first 5 branches in sidebar
+            .map(|branch| {
+                let prefix = if branch.is_current { "🌟 " } else { "🌿 " };
+                let display_text = format!("{}{}", prefix, branch.name);
+                ratatui::widgets::ListItem::new(display_text)
+                    .style(if branch.is_current {
+                        self.theme.success_style()
+                    } else {
+                        self.theme.text_style()
+                    })
+            })
+            .collect();
+
+        let branch_list = ratatui::widgets::List::new(branch_items)
+            .block(
+                Block::default()
+                    .title("🔀 Branches")
+                    .borders(Borders::ALL)
+                    .border_style(self.theme.border_style()),
+            )
+            .style(self.theme.text_style());
+
+        frame.render_widget(branch_list, area);
+    }
+
+    /// Render center content area (Git log, commits, diff view)
+    fn render_center_content(&mut self, frame: &mut Frame, area: Rect, state: &AppState) {
+        // Split center area: Commit log + Details panel
+        let center_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(70), // Commit log
+                Constraint::Percentage(30), // Details/diff panel
+            ])
+            .split(area);
+
+        // Render commit log
+        self.render_commit_log(frame, center_chunks[0], state);
+
+        // Render details panel
+        self.render_details_panel(frame, center_chunks[1], state);
+    }
+
+    /// Render commit log (main center area)
+    fn render_commit_log(&self, frame: &mut Frame, area: Rect, state: &AppState) {
+        let commits = vec![
+            "🔵 abc123 feat: Add new UI components (2 hours ago) - John Doe",
+            "🟢 def456 fix: Fix layout issues in branch view (1 day ago) - Jane Smith",
+            "🔴 ghi789 refactor: Improve code structure (2 days ago) - John Doe",
+            "🟡 jkl012 docs: Update README with examples (3 days ago) - Alice Johnson",
+            "🟢 mno345 test: Add comprehensive tests (4 days ago) - Bob Wilson",
+            "🔵 pqr678 feat: Implement search functionality (5 days ago) - Carol Davis",
+        ];
+
+        let commit_items: Vec<ratatui::widgets::ListItem> = commits
+            .iter()
+            .map(|&commit| ratatui::widgets::ListItem::new(commit))
+            .collect();
+
+        let commit_list = ratatui::widgets::List::new(commit_items)
+            .block(
+                Block::default()
+                    .title("📜 Git Log")
+                    .borders(Borders::ALL)
+                    .border_style(self.theme.accent_border_style()),
+            )
+            .style(self.theme.text_style())
+            .highlight_style(self.theme.highlight_style())
+            .highlight_symbol("▶ ");
+
+        frame.render_widget(commit_list, area);
+    }
+
+    /// Render details panel (bottom center area)
+    fn render_details_panel(&self, frame: &mut Frame, area: Rect, state: &AppState) {
+        let details_text = vec![
+            "Commit Details:",
+            "",
+            "📝 Message: feat: Add new UI components",
+            "👤 Author: John Doe <john@example.com>",
+            "📅 Date: 2024-01-15 14:30:22",
+            "🔗 Hash: abc123def456ghi789",
+            "",
+            "📊 Changes:",
+            "  +15 -3   src/ui/mod.rs",
+            "  +8  -0   src/ui/components.rs",
+            "  +2  -1   README.md",
+        ].join("\n");
+
+        let details = Paragraph::new(details_text)
+            .block(
+                Block::default()
+                    .title("🔍 Commit Details")
+                    .borders(Borders::ALL)
+                    .border_style(self.theme.border_style()),
+            )
+            .style(self.theme.text_style())
+            .wrap(ratatui::widgets::Wrap { trim: true });
+
+        frame.render_widget(details, area);
+    }
+
+    /// Render tab content based on current active tab
+    fn render_tab_content(&mut self, frame: &mut Frame, area: Rect, state: &AppState) {
+        match state.current_tab() {
+            TabType::Branches => {
+                // For Branches tab, show enhanced branch management interface
+                self.components
+                    .branches_tab
+                    .render(frame, area, state, &self.theme);
+            }
+            TabType::Tags => {
+                // For Tags tab, show tag management
+                self.components
+                    .tags_tab
+                    .render(frame, area, state, &self.theme);
+            }
+            TabType::Stash => {
+                // For Stash tab, show stash management
+                self.components
+                    .stash_tab
+                    .render(frame, area, state, &self.theme);
+            }
+            TabType::Status => {
+                // For Status tab, show file status and staging area
+                self.components
+                    .status_tab
+                    .render(frame, area, state, &self.theme);
+            }
+            TabType::Remotes => {
+                // For Remotes tab, show remote repositories
+                self.components
+                    .remotes_tab
+                    .render(frame, area, state, &self.theme);
+            }
+            TabType::History => {
+                // For History tab, show commit history with file tree
+                let content_layout = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([
+                        Constraint::Length(30), // Left sidebar (file tree/branches)
+                        Constraint::Min(0),     // Center content area (commits)
+                    ])
+                    .split(area);
+
+                // Render left sidebar with file tree and branches
+                self.render_left_sidebar(frame, content_layout[0], state);
+
+                // Render commit history in center
+                self.components
+                    .history_tab
+                    .render(frame, content_layout[1], state, &self.theme);
+            }
+            TabType::GitFlow => {
+                // For GitFlow tab, show git flow management
+                self.components
+                    .gitflow_tab
+                    .render(frame, area, state, &self.theme);
+            }
+        }
     }
 }
 
@@ -337,6 +699,7 @@ struct UIComponents {
     pub tags_tab: TagsTabComponent,
     pub stash_tab: StashTabComponent,
     pub remotes_tab: RemotesTabComponent,
+    pub history_tab: CommitHistoryComponent,
     pub gitflow_tab: GitFlowTabComponent,
 }
 
@@ -349,6 +712,7 @@ impl UIComponents {
             tags_tab: TagsTabComponent::new(),
             stash_tab: StashTabComponent::new(),
             remotes_tab: RemotesTabComponent::new(),
+            history_tab: CommitHistoryComponent::new(),
             gitflow_tab: GitFlowTabComponent::new(),
         }
     }
@@ -377,6 +741,7 @@ impl UIComponents {
                     TabType::Tags => self.tags_tab.handle_key_event(key, state),
                     TabType::Stash => self.stash_tab.handle_key_event(key, state),
                     TabType::Remotes => self.remotes_tab.handle_key_event(key, state),
+                    TabType::History => self.history_tab.handle_key_event(key, state),
                     TabType::GitFlow => self.gitflow_tab.handle_key_event(key, state),
                 }
             }
@@ -420,6 +785,7 @@ impl UIComponents {
             TabType::Stash => 2, // Mock data for now
             TabType::Status => state.git_state.file_status.len(),
             TabType::Remotes => 3, // Mock data for now
+            TabType::History => 3, // Mock data for now
             TabType::GitFlow => 3, // Mock data for now
         }
     }
