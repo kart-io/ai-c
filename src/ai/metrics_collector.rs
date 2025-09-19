@@ -662,7 +662,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_metric_creation() {
-        let labels = [("agent_id".to_string(), "test-agent".to_string())].into();
+        let labels: HashMap<String, String> = [("agent_id".to_string(), "test-agent".to_string())].into();
 
         let counter = Metric::counter("test_counter", 10, labels.clone());
         assert_eq!(counter.name(), "test_counter");

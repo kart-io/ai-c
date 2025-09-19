@@ -513,7 +513,7 @@ mod tests {
     async fn test_config_watchers() {
         let (manager, _temp_dir) = create_test_config_manager().await;
         let config = create_test_config();
-        let agent_id = &config.id;
+        let agent_id = config.id.clone();
 
         let (tx, mut rx) = mpsc::unbounded_channel();
         let watcher = Arc::new(move |agent_id: &str, _config: &AgentConfig| {
@@ -521,11 +521,11 @@ mod tests {
             Ok(())
         });
 
-        manager.watch_config(agent_id, watcher).await.unwrap();
-        manager.update_agent_config(agent_id, config).await.unwrap();
+        manager.watch_config(&agent_id, watcher).await.unwrap();
+        manager.update_agent_config(&agent_id, config).await.unwrap();
 
         // Should receive notification
         let notified_agent_id = rx.recv().await.unwrap();
-        assert_eq!(notified_agent_id, *agent_id);
+        assert_eq!(notified_agent_id, agent_id);
     }
 }

@@ -14,7 +14,11 @@ use crate::{
     app::state::AppState,
     error::AppResult,
     git::CommitInfo,
-    ui::{components::DiffViewerComponent, theme::Theme},
+    ui::{
+        components::DiffViewerComponent,
+        keyboard::{ShortcutManager, NavigationHandler, ActionKey},
+        theme::Theme,
+    },
 };
 
 /// Commit history display modes
@@ -40,6 +44,7 @@ pub struct CommitHistoryComponent {
     search_filter: String,
     author_filter: Option<String>,
     branch_colors: HashMap<String, Color>,
+    shortcut_manager: ShortcutManager,
 }
 
 impl CommitHistoryComponent {
@@ -55,6 +60,7 @@ impl CommitHistoryComponent {
             search_filter: String::new(),
             author_filter: None,
             branch_colors: Self::init_branch_colors(),
+            shortcut_manager: ShortcutManager::new(),
         }
     }
 
@@ -443,67 +449,97 @@ impl CommitHistoryComponent {
 
         let commits = self.get_filtered_commits(state);
 
+        // Reset selected_index if no commits available
+        if commits.is_empty() {
+            self.selected_index = 0;
+            return Ok(());
+        }
+
+        // Ensure selected_index is within bounds
+        if self.selected_index >= commits.len() {
+            self.selected_index = commits.len() - 1;
+        }
+
+        // Handle History-specific keys first (preserve existing functionality)
         match key.code {
-            KeyCode::Up | KeyCode::Char('k') => {
-                if self.selected_index > 0 {
-                    self.selected_index -= 1;
-                }
-            }
-            KeyCode::Down | KeyCode::Char('j') => {
-                if self.selected_index < commits.len().saturating_sub(1) {
-                    self.selected_index += 1;
-                }
-            }
-            KeyCode::PageUp => {
-                if self.current_page > 0 {
-                    self.current_page -= 1;
-                    self.selected_index = 0;
-                }
-            }
-            KeyCode::PageDown => {
-                let total_pages = (commits.len() + self.commits_per_page - 1) / self.commits_per_page;
-                if self.current_page < total_pages.saturating_sub(1) {
-                    self.current_page += 1;
-                    self.selected_index = 0;
-                }
-            }
-            KeyCode::Enter => {
-                // Show commit details
-                if let Some(commit) = commits.get(self.selected_index) {
-                    self.show_commit_details = true;
-                    self.load_commit_diff(commit, state)?;
-                }
-            }
             KeyCode::Char('m') => {
-                // Toggle display mode
+                // Toggle display mode (History-specific)
                 self.display_mode = match self.display_mode {
                     HistoryDisplayMode::Linear => HistoryDisplayMode::Graph,
                     HistoryDisplayMode::Graph => HistoryDisplayMode::Compact,
                     HistoryDisplayMode::Compact => HistoryDisplayMode::Linear,
                 };
+                return Ok(());
             }
             KeyCode::Char('f') => {
-                // Toggle file list in details view
+                // Toggle file list in details view (History-specific)
                 self.show_file_list = !self.show_file_list;
+                return Ok(());
             }
             KeyCode::Char('/') => {
-                // Start search (would open input modal in real implementation)
+                // Start search (History-specific)
                 tracing::info!("Search mode activated");
+                return Ok(());
             }
             KeyCode::Char('a') => {
-                // Filter by author (would open input modal in real implementation)
+                // Filter by author (History-specific)
                 tracing::info!("Author filter activated");
+                return Ok(());
             }
-            KeyCode::Esc => {
-                // Clear filters or exit details
-                if self.show_commit_details {
-                    self.show_commit_details = false;
-                } else {
-                    self.search_filter.clear();
-                    self.author_filter = None;
+            KeyCode::PageUp => {
+                // Page navigation (History-specific)
+                if self.current_page > 0 {
+                    self.current_page -= 1;
+                    self.selected_index = 0;
+                }
+                return Ok(());
+            }
+            KeyCode::PageDown => {
+                // Page navigation (History-specific)
+                let total_pages = (commits.len() + self.commits_per_page - 1) / self.commits_per_page;
+                if self.current_page < total_pages.saturating_sub(1) {
+                    self.current_page += 1;
+                    self.selected_index = 0;
+                }
+                return Ok(());
+            }
+            _ => {} // Continue to unified shortcut processing
+        }
+
+        // 使用统一的快捷键管理器处理导航键
+        if let Some(nav_key) = self.shortcut_manager.is_navigation_key(&key) {
+            let item_count = commits.len();
+            let mut nav_handler = CommitHistoryNavigationHandler {
+                component: self,
+                item_count,
+            };
+            nav_handler.handle_navigation(nav_key);
+            return Ok(());
+        }
+
+        // 使用统一的快捷键管理器处理动作键
+        if let Some(action_key) = self.shortcut_manager.is_action_key(&key) {
+            match action_key {
+                ActionKey::Confirm => {
+                    // Show commit details
+                    if let Some(commit) = commits.get(self.selected_index) {
+                        self.show_commit_details = true;
+                        self.load_commit_diff(commit, state)?;
+                    }
+                }
+                ActionKey::Cancel => {
+                    // Clear filters or exit details
+                    if self.show_commit_details {
+                        self.show_commit_details = false;
+                    } else {
+                        self.search_filter.clear();
+                        self.author_filter = None;
+                    }
+                }
+                _ => {
+                    // 其他动作键暂时忽略
                 }
             }
-            _ => {}
         }
 
         Ok(())
@@ -549,5 +585,25 @@ impl CommitHistoryComponent {
         });
 
         Ok(())
+    }
+}
+
+/// Helper structure for navigation handling with dynamic item count
+struct CommitHistoryNavigationHandler<'a> {
+    component: &'a mut CommitHistoryComponent,
+    item_count: usize,
+}
+
+impl<'a> NavigationHandler for CommitHistoryNavigationHandler<'a> {
+    fn selected_index(&self) -> usize {
+        self.component.selected_index
+    }
+
+    fn set_selected_index(&mut self, index: usize) {
+        self.component.selected_index = index;
+    }
+
+    fn item_count(&self) -> usize {
+        self.item_count
     }
 }

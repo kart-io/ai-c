@@ -10,11 +10,11 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::sync::{RwLock, Mutex};
-use tracing::{debug, info, instrument, warn};
+use tracing::{debug, error, info, instrument, warn};
 
 use super::{
-    cache::StatusCache, find_git_root, operations::GitOperations, BranchInfo, CommitInfo, FileStatus, GitStatusFlags,
-    RemoteInfo, StashInfo, TagInfo,
+    cache::{StatusCache, BranchCache}, find_git_root, operations::GitOperations, BranchInfo, CommitInfo, FileStatus, GitStatusFlags,
+    RemoteInfo, StashInfo, TagInfo, GitFlowStatus,
 };
 use crate::{
     config::GitConfig,
@@ -36,6 +36,8 @@ pub struct GitService {
     repo_path: PathBuf,
     /// Status cache for performance optimization
     status_cache: Arc<RwLock<StatusCache>>,
+    /// Branch cache for performance optimization
+    branch_cache: Arc<RwLock<BranchCache>>,
     /// Performance monitoring
     performance_monitor: PerformanceMonitor,
     /// Configuration
@@ -72,8 +74,9 @@ impl GitService {
             AppError::Git(e)
         })?;
 
-        // Initialize status cache
+        // Initialize caches
         let status_cache = Arc::new(RwLock::new(StatusCache::new()));
+        let branch_cache = Arc::new(RwLock::new(BranchCache::new()));
 
         // Initialize performance monitor
         let performance_monitor = PerformanceMonitor::new();
@@ -94,6 +97,7 @@ impl GitService {
             repo: Arc::new(Mutex::new(repo)),
             repo_path,
             status_cache,
+            branch_cache,
             performance_monitor,
             config: config.clone(),
             is_mock: false,
@@ -601,11 +605,11 @@ impl GitService {
             ]);
         }
 
-        // Use real Git operations
+        // Delegate to the improved async implementation
         tokio::task::block_in_place(|| {
-            let mut repo_guard = self.repo.blocking_lock();
-            let operations = GitOperations::new(&mut *repo_guard);
-            operations.list_branches()
+            tokio::runtime::Handle::current().block_on(async {
+                self.get_branches().await
+            })
         })
     }
 
@@ -727,7 +731,13 @@ impl GitService {
     /// Create a new branch
     #[instrument(skip(self))]
     pub async fn create_branch(&self, name: &str, _target: Option<&str>) -> AppResult<BranchInfo> {
+        let operation_start = Instant::now();
+        info!("Creating branch: {}", name);
+
         if self.is_mock {
+            // Invalidate cache after creating branch
+            self.invalidate_cache().await;
+
             return Ok(BranchInfo {
                 name: name.to_string(),
                 is_current: false,
@@ -743,7 +753,19 @@ impl GitService {
             });
         }
 
+        // TODO: Implement real branch creation logic
         debug!("Mock create_branch operation for {}", name);
+
+        let duration = operation_start.elapsed();
+        self.performance_monitor.record_operation(
+            "create_branch".to_string(),
+            duration,
+            1,
+        );
+
+        // Invalidate cache after creating branch
+        self.invalidate_cache().await;
+
         Ok(BranchInfo {
             name: name.to_string(),
             is_current: false,
@@ -774,8 +796,8 @@ impl GitService {
         let operations = GitOperations::new(&mut *repo);
         operations.switch_branch(name)?;
 
-        // Clear cache after branch switch
-        self.status_cache.write().await.invalidate();
+        // Clear all caches after branch switch
+        self.invalidate_cache().await;
 
         info!("Successfully switched to branch: {}", name);
         Ok(())
@@ -784,12 +806,29 @@ impl GitService {
     /// Delete a branch
     #[instrument(skip(self))]
     pub async fn delete_branch(&self, name: &str) -> AppResult<()> {
+        let operation_start = Instant::now();
+        info!("Deleting branch: {}", name);
+
         if self.is_mock {
             debug!("Mock service: deleting branch {} (no-op)", name);
+            // Invalidate cache after deleting branch
+            self.invalidate_cache().await;
             return Ok(());
         }
 
+        // TODO: Implement real branch deletion logic
         debug!("Mock delete_branch operation for {}", name);
+
+        let duration = operation_start.elapsed();
+        self.performance_monitor.record_operation(
+            "delete_branch".to_string(),
+            duration,
+            1,
+        );
+
+        // Invalidate cache after deleting branch
+        self.invalidate_cache().await;
+
         Ok(())
     }
 
@@ -1013,15 +1052,95 @@ impl GitService {
         Ok(())
     }
 
+    /// Apply a stash without removing it
+    #[instrument(skip(self))]
+    pub async fn stash_apply(&self, _index: usize) -> AppResult<()> {
+        if self.is_mock {
+            debug!("Mock service: applying stash without removing (no-op)");
+            return Ok(());
+        }
+
+        debug!("Mock stash_apply operation");
+        Ok(())
+    }
+
+    /// Drop (delete) a stash
+    #[instrument(skip(self))]
+    pub async fn stash_drop(&self, _index: usize) -> AppResult<()> {
+        if self.is_mock {
+            debug!("Mock service: dropping stash (no-op)");
+            return Ok(());
+        }
+
+        debug!("Mock stash_drop operation");
+        Ok(())
+    }
+
+    /// Get stash diff content
+    #[instrument(skip(self))]
+    pub async fn get_stash_diff(&self, index: usize) -> AppResult<String> {
+        if self.is_mock {
+            let mock_diff = format!(
+                "diff --git a/src/main.rs b/src/main.rs\n\
+                 index abc1234..def5678 100644\n\
+                 --- a/src/main.rs\n\
+                 +++ b/src/main.rs\n\
+                 @@ -1,8 +1,12 @@\n\
+                  fn main() {{\n\
+                      println!(\"Hello, world!\");\n\
+                 +    println!(\"Stashed change {}\");\n\
+                 +    // Added in stash\n\
+                  }}\n\
+                 +\n\
+                 +fn new_function() {{\n\
+                 +    println!(\"New function from stash\");\n\
+                 +}}\n",
+                index
+            );
+            return Ok(mock_diff);
+        }
+
+        // Use git operations for real stash diff
+        let stash_ref = format!("stash@{{{}}}", index);
+
+        // Run git show command to get stash diff
+        let output = std::process::Command::new("git")
+            .arg("show")
+            .arg("--format=")
+            .arg(&stash_ref)
+            .current_dir(&self.repo_path)
+            .output()
+            .map_err(|e| crate::error::AppError::Io(e))?;
+
+        if !output.status.success() {
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            return Err(crate::error::AppError::Application {
+                message: format!("Failed to get stash diff: {}", error_msg)
+            });
+        }
+
+        let diff_content = String::from_utf8_lossy(&output.stdout).to_string();
+        Ok(diff_content)
+    }
+
     /// Get repository path
     pub fn repo_path(&self) -> &Path {
         &self.repo_path
     }
 
-    /// Invalidate the status cache
+    /// Invalidate all caches
     async fn invalidate_cache(&self) {
-        let mut cache = self.status_cache.write().await;
-        cache.invalidate();
+        // Invalidate status cache
+        {
+            let mut cache = self.status_cache.write().await;
+            cache.invalidate();
+        }
+
+        // Invalidate branch cache
+        {
+            let mut cache = self.branch_cache.write().await;
+            cache.invalidate();
+        }
     }
 
     /// Get file size
@@ -1079,6 +1198,7 @@ impl GitService {
             repo: Arc::new(Mutex::new(mock_repo)),
             repo_path: current_dir,
             status_cache: Arc::new(RwLock::new(StatusCache::new())),
+            branch_cache: Arc::new(RwLock::new(BranchCache::new())),
             performance_monitor: PerformanceMonitor::new(),
             config: config.clone(),
             is_mock: true,
@@ -1088,7 +1208,6 @@ impl GitService {
     /// Get file content at HEAD commit
     #[instrument(skip(self, file_path))]
     pub fn get_file_content_at_head<P: AsRef<std::path::Path>>(&self, file_path: P) -> AppResult<String> {
-        use git2::{ObjectType, TreeWalkMode};
 
         let file_path = file_path.as_ref();
         if self.is_mock {
@@ -1167,8 +1286,93 @@ impl GitService {
         self.get_commit_history(limit).await
     }
 
+    /// Get commits for a specific branch
+    #[instrument(skip(self))]
+    pub async fn get_branch_commits(&self, branch_name: &str, limit: usize) -> AppResult<Vec<CommitInfo>> {
+        if self.is_mock {
+            return Ok(vec![
+                CommitInfo {
+                    hash: "abc123456789".to_string(),
+                    short_hash: "abc123".to_string(),
+                    message: "feat: Add new feature".to_string(),
+                    author: "Developer".to_string(),
+                    author_email: "dev@example.com".to_string(),
+                    date: Utc::now() - chrono::Duration::hours(2),
+                    parents: vec!["def456789012".to_string()],
+                },
+                CommitInfo {
+                    hash: "def456789012".to_string(),
+                    short_hash: "def456".to_string(),
+                    message: "fix: Fix critical bug".to_string(),
+                    author: "Developer".to_string(),
+                    author_email: "dev@example.com".to_string(),
+                    date: Utc::now() - chrono::Duration::days(1),
+                    parents: vec!["ghi789012345".to_string()],
+                },
+                CommitInfo {
+                    hash: "ghi789012345".to_string(),
+                    short_hash: "ghi789".to_string(),
+                    message: "docs: Update README".to_string(),
+                    author: "Documentation Team".to_string(),
+                    author_email: "docs@example.com".to_string(),
+                    date: Utc::now() - chrono::Duration::days(3),
+                    parents: vec!["jkl012345678".to_string()],
+                },
+            ]);
+        }
+
+        let repo = self.repo.lock().await;
+        let mut revwalk = repo.revwalk().map_err(AppError::Git)?;
+
+        // Try to find the branch reference and start from there
+        match repo.find_branch(branch_name, git2::BranchType::Local) {
+            Ok(branch) => {
+                if let Some(oid) = branch.get().target() {
+                    revwalk.push(oid).map_err(AppError::Git)?;
+                } else {
+                    // Fallback to HEAD if branch has no target
+                    revwalk.push_head().map_err(AppError::Git)?;
+                }
+            }
+            Err(_) => {
+                // Fallback to HEAD if branch not found
+                revwalk.push_head().map_err(AppError::Git)?;
+            }
+        }
+
+        revwalk.set_sorting(git2::Sort::TIME).map_err(AppError::Git)?;
+
+        let mut commits = Vec::new();
+
+        for (i, oid_result) in revwalk.enumerate() {
+            if i >= limit {
+                break;
+            }
+
+            let oid = oid_result.map_err(AppError::Git)?;
+            let commit = repo.find_commit(oid).map_err(AppError::Git)?;
+
+            let commit_info = CommitInfo {
+                hash: commit.id().to_string(),
+                short_hash: commit.id().to_string()[..7].to_string(),
+                message: commit.message().unwrap_or("").to_string(),
+                author: commit.author().name().unwrap_or("").to_string(),
+                author_email: commit.author().email().unwrap_or("").to_string(),
+                date: DateTime::from_timestamp(commit.time().seconds(), 0)
+                    .unwrap_or_else(|| Utc::now()),
+                parents: commit.parent_ids().map(|id| id.to_string()).collect(),
+            };
+
+            commits.push(commit_info);
+        }
+
+        Ok(commits)
+    }
+
     /// Get branches (for UI compatibility)
     pub async fn get_branches(&self) -> AppResult<Vec<BranchInfo>> {
+        let operation_start = Instant::now();
+
         if self.is_mock {
             // Return mock branches
             return Ok(vec![
@@ -1201,30 +1405,149 @@ impl GitService {
             ]);
         }
 
+        info!("Getting Git branches");
+
+        // Check cache first for performance
+        {
+            let cache = self.branch_cache.read().await;
+            if let Some(cached_branches) = cache.get_if_fresh() {
+                debug!("Using cached Git branches with {} entries", cached_branches.len());
+                return Ok(cached_branches.clone());
+            }
+        }
+
         // Real implementation for actual Git repositories
         let repo = self.repo.lock().await;
         let mut branches = Vec::new();
 
-        let branch_iter = repo.branches(None).map_err(AppError::Git)?;
+        let branch_iter = repo.branches(Some(git2::BranchType::Local)).map_err(AppError::Git)?;
         for branch_result in branch_iter {
-            let (branch, _branch_type) = branch_result.map_err(AppError::Git)?;
+            let (branch, branch_type) = branch_result.map_err(AppError::Git)?;
             if let Some(name) = branch.name().map_err(AppError::Git)? {
                 let is_current = branch.is_head();
+                let is_remote = branch_type == git2::BranchType::Remote;
+
+                // Get the last commit for this branch
+                let (last_commit_hash, last_commit_message, last_commit_author, last_commit_date) =
+                    if let Some(oid) = branch.get().target() {
+                        match repo.find_commit(oid) {
+                            Ok(commit) => {
+                                let hash = commit.id().to_string();
+                                let short_hash = hash[..7].to_string();
+                                let message = commit.message().unwrap_or("").to_string();
+                                let author = commit.author().name().unwrap_or("Unknown").to_string();
+                                let date = DateTime::from_timestamp(commit.time().seconds(), 0)
+                                    .unwrap_or_else(|| Utc::now());
+                                (short_hash, message, author, date)
+                            }
+                            Err(_) => ("unknown".to_string(), "".to_string(), "".to_string(), Utc::now())
+                        }
+                    } else {
+                        ("unknown".to_string(), "".to_string(), "".to_string(), Utc::now())
+                    };
+
+                // Get upstream information if available
+                let upstream = if let Ok(upstream_branch) = branch.upstream() {
+                    upstream_branch.name().ok().flatten().map(|s| s.to_string())
+                } else {
+                    None
+                };
+
+                // Calculate ahead/behind counts for local branches with upstream
+                let (ahead, behind) = if !is_remote && upstream.is_some() {
+                    self.calculate_ahead_behind(&repo, &name).unwrap_or((0, 0))
+                } else {
+                    (0, 0)
+                };
 
                 branches.push(BranchInfo {
                     name: name.to_string(),
                     is_current,
-                    is_remote: false, // Simplified for now
-                    is_local: true,   // Assume local for now
+                    is_remote,
+                    is_local: !is_remote,
+                    upstream: upstream.clone(),
+                    ahead,
+                    behind,
+                    last_commit: last_commit_hash,
+                    last_commit_message: last_commit_message,
+                    last_commit_author: last_commit_author,
+                    last_commit_date: last_commit_date,
+                });
+            }
+        }
+
+        // Also get remote branches
+        let remote_branch_iter = repo.branches(Some(git2::BranchType::Remote)).map_err(AppError::Git)?;
+        for branch_result in remote_branch_iter {
+            let (branch, _branch_type) = branch_result.map_err(AppError::Git)?;
+            if let Some(name) = branch.name().map_err(AppError::Git)? {
+                // Skip origin/HEAD references
+                if name.ends_with("/HEAD") {
+                    continue;
+                }
+
+                let (last_commit_hash, last_commit_message, last_commit_author, last_commit_date) =
+                    if let Some(oid) = branch.get().target() {
+                        match repo.find_commit(oid) {
+                            Ok(commit) => {
+                                let hash = commit.id().to_string();
+                                let short_hash = hash[..7].to_string();
+                                let message = commit.message().unwrap_or("").to_string();
+                                let author = commit.author().name().unwrap_or("Unknown").to_string();
+                                let date = DateTime::from_timestamp(commit.time().seconds(), 0)
+                                    .unwrap_or_else(|| Utc::now());
+                                (short_hash, message, author, date)
+                            }
+                            Err(_) => ("unknown".to_string(), "".to_string(), "".to_string(), Utc::now())
+                        }
+                    } else {
+                        ("unknown".to_string(), "".to_string(), "".to_string(), Utc::now())
+                    };
+
+                branches.push(BranchInfo {
+                    name: name.to_string(),
+                    is_current: false,
+                    is_remote: true,
+                    is_local: false,
                     upstream: None,
                     ahead: 0,
                     behind: 0,
-                    last_commit: "unknown".to_string(),
-                    last_commit_message: "".to_string(),
-                    last_commit_author: "".to_string(),
-                    last_commit_date: Utc::now(),
+                    last_commit: last_commit_hash,
+                    last_commit_message: last_commit_message,
+                    last_commit_author: last_commit_author,
+                    last_commit_date: last_commit_date,
                 });
             }
+        }
+
+        let duration = operation_start.elapsed();
+
+        // Performance monitoring
+        self.performance_monitor.record_operation(
+            "git_branches".to_string(),
+            duration,
+            branches.len(),
+        );
+
+        // Performance validation
+        if duration > Duration::from_millis(500) {
+            warn!(
+                "Git branches operation exceeded 500ms target: {:?} for {} branches",
+                duration,
+                branches.len()
+            );
+        } else {
+            debug!(
+                "Git branches completed in {:?} for {} branches",
+                duration,
+                branches.len()
+            );
+        }
+
+        // Update cache
+        {
+            let mut cache = self.branch_cache.write().await;
+            cache.store(branches.clone());
         }
 
         Ok(branches)
@@ -1238,6 +1561,359 @@ impl GitService {
     /// Get remotes (alias for list_remotes for UI compatibility)
     pub async fn get_remotes(&self) -> AppResult<Vec<RemoteInfo>> {
         self.list_remotes().await
+    }
+
+    // ================== GitFlow Workflow Methods ==================
+
+    /// List branches by GitFlow type pattern
+    #[instrument(skip(self))]
+    pub async fn list_gitflow_branches(&self, flow_type: &str) -> AppResult<Vec<BranchInfo>> {
+        let prefix = match flow_type {
+            "feature" => "feature/",
+            "release" => "release/",
+            "hotfix" => "hotfix/",
+            "support" => "support/",
+            _ => return Ok(vec![]),
+        };
+
+        if self.is_mock {
+            // Return mock GitFlow branches based on type
+            return Ok(match flow_type {
+                "feature" => vec![
+                    BranchInfo {
+                        name: "feature/user-authentication".to_string(),
+                        is_current: false,
+                        is_remote: false,
+                        is_local: true,
+                        upstream: None,
+                        ahead: 3,
+                        behind: 0,
+                        last_commit: "f1e2d3c4b5a69870".to_string(),
+                        last_commit_message: "Implement user authentication logic".to_string(),
+                        last_commit_author: "Auth Developer".to_string(),
+                        last_commit_date: Utc::now() - chrono::Duration::days(2),
+                    },
+                    BranchInfo {
+                        name: "feature/payment-integration".to_string(),
+                        is_current: true,
+                        is_remote: false,
+                        is_local: true,
+                        upstream: None,
+                        ahead: 7,
+                        behind: 1,
+                        last_commit: "a9b8c7d6e5f41203".to_string(),
+                        last_commit_message: "Add payment gateway integration".to_string(),
+                        last_commit_author: "Payment Developer".to_string(),
+                        last_commit_date: Utc::now() - chrono::Duration::hours(4),
+                    },
+                    BranchInfo {
+                        name: "feature/dashboard-ui".to_string(),
+                        is_current: false,
+                        is_remote: false,
+                        is_local: true,
+                        upstream: None,
+                        ahead: 2,
+                        behind: 0,
+                        last_commit: "c7d8e9f0a1b23456".to_string(),
+                        last_commit_message: "Update dashboard UI components".to_string(),
+                        last_commit_author: "UI Developer".to_string(),
+                        last_commit_date: Utc::now() - chrono::Duration::days(1),
+                    },
+                ],
+                "release" => vec![
+                    BranchInfo {
+                        name: "release/v2.1.0".to_string(),
+                        is_current: false,
+                        is_remote: false,
+                        is_local: true,
+                        upstream: None,
+                        ahead: 1,
+                        behind: 0,
+                        last_commit: "r1e2l3e4a5s67890".to_string(),
+                        last_commit_message: "Prepare release v2.1.0".to_string(),
+                        last_commit_author: "Release Manager".to_string(),
+                        last_commit_date: Utc::now() - chrono::Duration::days(3),
+                    },
+                ],
+                "hotfix" => vec![
+                    BranchInfo {
+                        name: "hotfix/critical-security-fix".to_string(),
+                        is_current: false,
+                        is_remote: false,
+                        is_local: true,
+                        upstream: None,
+                        ahead: 1,
+                        behind: 0,
+                        last_commit: "h1o2t3f4i5x67890".to_string(),
+                        last_commit_message: "Fix critical security vulnerability".to_string(),
+                        last_commit_author: "Security Team".to_string(),
+                        last_commit_date: Utc::now() - chrono::Duration::hours(6),
+                    },
+                ],
+                "support" => vec![
+                    BranchInfo {
+                        name: "support/v1.x".to_string(),
+                        is_current: false,
+                        is_remote: false,
+                        is_local: true,
+                        upstream: None,
+                        ahead: 0,
+                        behind: 5,
+                        last_commit: "s1u2p3p4o5r67890".to_string(),
+                        last_commit_message: "Maintain v1.x support branch".to_string(),
+                        last_commit_author: "Support Team".to_string(),
+                        last_commit_date: Utc::now() - chrono::Duration::days(7),
+                    },
+                ],
+                _ => vec![],
+            });
+        }
+
+        // In real implementation, filter branches by prefix
+        let all_branches = self.list_branches()?;
+        Ok(all_branches.into_iter()
+            .filter(|branch| branch.name.starts_with(prefix))
+            .collect())
+    }
+
+    /// Create a new GitFlow branch
+    #[instrument(skip(self))]
+    pub async fn create_gitflow_branch(&self, flow_type: &str, name: &str) -> AppResult<BranchInfo> {
+        let branch_name = format!("{}/{}", flow_type, name);
+
+        if self.is_mock {
+            debug!("Mock service: creating GitFlow branch {} (no-op)", branch_name);
+            return Ok(BranchInfo {
+                name: branch_name,
+                is_current: true,
+                is_remote: false,
+                is_local: true,
+                upstream: None,
+                ahead: 0,
+                behind: 0,
+                last_commit: "new_branch_commit".to_string(),
+                last_commit_message: format!("Create new {} branch", flow_type),
+                last_commit_author: "Git User".to_string(),
+                last_commit_date: Utc::now(),
+            });
+        }
+
+        // In real implementation, create branch from appropriate base
+        let base_branch = match flow_type {
+            "feature" => "develop",
+            "release" => "develop",
+            "hotfix" => "main",
+            "support" => "main",
+            _ => return Err(AppError::InvalidOperation("Invalid GitFlow branch type".to_string())),
+        };
+
+        debug!("Creating GitFlow branch {} from {}", branch_name, base_branch);
+        self.create_branch(&branch_name, Some(base_branch)).await
+    }
+
+    /// Finish a GitFlow branch (merge and cleanup)
+    #[instrument(skip(self))]
+    pub async fn finish_gitflow_branch(&self, flow_type: &str, branch_name: &str) -> AppResult<()> {
+        if self.is_mock {
+            debug!("Mock service: finishing GitFlow branch {} (no-op)", branch_name);
+            return Ok(());
+        }
+
+        // In real implementation, this would:
+        // 1. Merge to appropriate target branches
+        // 2. Delete the feature branch
+        // 3. Handle tagging for releases
+
+        let (target_branches, should_tag) = match flow_type {
+            "feature" => (vec!["develop"], false),
+            "release" => (vec!["main", "develop"], true),
+            "hotfix" => (vec!["main", "develop"], true),
+            "support" => (vec![], false), // Support branches aren't merged
+            _ => return Err(AppError::InvalidOperation("Invalid GitFlow branch type".to_string())),
+        };
+
+        debug!("Finishing GitFlow branch {} -> merge to {:?}, tag: {}",
+               branch_name, target_branches, should_tag);
+
+        // For now, just simulate the operation
+        Ok(())
+    }
+
+    /// Get current GitFlow status
+    #[instrument(skip(self))]
+    pub async fn get_gitflow_status(&self) -> AppResult<GitFlowStatus> {
+        if self.is_mock {
+            return Ok(GitFlowStatus {
+                feature_branches: self.list_gitflow_branches("feature").await?.len(),
+                release_branches: self.list_gitflow_branches("release").await?.len(),
+                hotfix_branches: self.list_gitflow_branches("hotfix").await?.len(),
+                support_branches: self.list_gitflow_branches("support").await?.len(),
+                current_branch: self.get_current_branch()?.map(|b| b.name),
+                is_gitflow_repo: true,
+                main_branch: "main".to_string(),
+                develop_branch: "develop".to_string(),
+            });
+        }
+
+        // In real implementation, detect GitFlow configuration
+        Ok(GitFlowStatus {
+            feature_branches: 0,
+            release_branches: 0,
+            hotfix_branches: 0,
+            support_branches: 0,
+            current_branch: None,
+            is_gitflow_repo: false,
+            main_branch: "main".to_string(),
+            develop_branch: "develop".to_string(),
+        })
+    }
+
+    /// Merge a branch into the current branch
+    #[instrument(skip(self))]
+    pub async fn merge_branch(&self, source_branch: &str) -> AppResult<()> {
+        if self.is_mock {
+            debug!("Mock service: merging branch {} (no-op)", source_branch);
+            return Ok(());
+        }
+
+        // In real implementation, this would perform git merge
+        debug!("Merging branch {} into current branch", source_branch);
+
+        // TODO: Implement actual git merge logic using git2
+        // This would involve:
+        // 1. Getting current branch
+        // 2. Finding source branch commit
+        // 3. Performing merge
+        // 4. Handling conflicts if any
+
+        Ok(())
+    }
+
+    /// Push a branch to its remote
+    #[instrument(skip(self))]
+    pub async fn push_branch(&self, branch_name: &str) -> AppResult<()> {
+        if self.is_mock {
+            debug!("Mock service: pushing branch {} (no-op)", branch_name);
+            return Ok(());
+        }
+
+        // In real implementation, this would push to remote
+        debug!("Pushing branch {} to remote", branch_name);
+
+        // TODO: Implement actual git push logic
+        // This would involve:
+        // 1. Finding remote for branch
+        // 2. Pushing commits to remote
+        // 3. Setting up tracking if needed
+
+        Ok(())
+    }
+
+    /// Pull changes from remote branch
+    #[instrument(skip(self))]
+    pub async fn pull_branch(&self, branch_name: &str) -> AppResult<()> {
+        if self.is_mock {
+            debug!("Mock service: pulling branch {} (no-op)", branch_name);
+            return Ok(());
+        }
+
+        debug!("Pulling changes for branch {} from remote", branch_name);
+
+        // In a real implementation, this would:
+        // 1. Fetch from the remote repository
+        // 2. Merge or rebase the changes
+        // 3. Update the local branch
+
+        // For now, simulate the operation by running git pull command
+        match std::process::Command::new("git")
+            .arg("pull")
+            .arg("origin")
+            .arg(branch_name)
+            .current_dir(&self.repo_path)
+            .output()
+        {
+            Ok(output) => {
+                if output.status.success() {
+                    debug!("Successfully pulled branch {}", branch_name);
+                    Ok(())
+                } else {
+                    let error_msg = String::from_utf8_lossy(&output.stderr);
+                    warn!("Failed to pull branch {}: {}", branch_name, error_msg);
+                    Err(AppError::Application {
+                        message: format!("Pull failed: {}", error_msg)
+                    })
+                }
+            }
+            Err(e) => {
+                error!("Failed to execute git pull command: {:?}", e);
+                Err(AppError::Application {
+                    message: format!("Could not execute git pull: {:?}", e)
+                })
+            }
+        }
+    }
+
+    /// Pull changes from remote (general pull operation)
+    #[instrument(skip(self))]
+    pub async fn pull(&self) -> AppResult<()> {
+        if self.is_mock {
+            debug!("Mock service: pulling from remote (no-op)");
+            return Ok(());
+        }
+
+        debug!("Pulling changes from remote");
+
+        // Simple git pull operation
+        match std::process::Command::new("git")
+            .arg("pull")
+            .current_dir(&self.repo_path)
+            .output()
+        {
+            Ok(output) => {
+                if output.status.success() {
+                    debug!("Successfully pulled from remote");
+                    Ok(())
+                } else {
+                    let error_msg = String::from_utf8_lossy(&output.stderr);
+                    warn!("Failed to pull from remote: {}", error_msg);
+                    Err(AppError::Application {
+                        message: format!("Pull failed: {}", error_msg)
+                    })
+                }
+            }
+            Err(e) => {
+                error!("Failed to execute git pull command: {:?}", e);
+                Err(AppError::Application {
+                    message: format!("Could not execute git pull: {:?}", e)
+                })
+            }
+        }
+    }
+
+    /// Calculate ahead/behind counts for a branch against its upstream
+    fn calculate_ahead_behind(&self, repo: &git2::Repository, branch_name: &str) -> Result<(usize, usize), git2::Error> {
+        // Get the local branch
+        let local_branch = repo.find_branch(branch_name, git2::BranchType::Local)?;
+
+        // Get the upstream branch
+        let upstream_branch = match local_branch.upstream() {
+            Ok(upstream) => upstream,
+            Err(_) => return Ok((0, 0)), // No upstream
+        };
+
+        // Get commit OIDs for both branches
+        let local_oid = local_branch.get().target().ok_or(git2::Error::from_str("No target for local branch"))?;
+        let upstream_oid = upstream_branch.get().target().ok_or(git2::Error::from_str("No target for upstream branch"))?;
+
+        // If they're the same, no difference
+        if local_oid == upstream_oid {
+            return Ok((0, 0));
+        }
+
+        // Use git2's ahead_behind function to calculate the difference
+        let (ahead, behind) = repo.graph_ahead_behind(local_oid, upstream_oid)?;
+
+        Ok((ahead, behind))
     }
 
 }

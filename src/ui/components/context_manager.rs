@@ -280,7 +280,7 @@ impl ContextMenuManager {
 
             MenuItem::new("help", "Help", MenuAction::Custom("help".to_string()))
                 .with_icon("❓")
-                .with_hotkey("F1"),
+                .with_hotkey("?"),
         ]
     }
 

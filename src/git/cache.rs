@@ -3,7 +3,7 @@
 //! Provides intelligent caching to optimize performance for large repositories
 //! with >10,000 files while maintaining data freshness.
 
-use crate::git::FileStatus;
+use crate::git::{FileStatus, BranchInfo};
 use chrono::{DateTime, Utc};
 use std::time::{Duration, SystemTime};
 
@@ -142,6 +142,118 @@ pub struct CacheStats {
 }
 
 impl Default for StatusCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Branch cache for Git branch operations
+///
+/// Provides caching for branch information including ahead/behind counts
+/// which can be expensive to calculate for repositories with many branches.
+#[derive(Debug)]
+pub struct BranchCache {
+    /// Cached branch entries
+    cached_branches: Option<Vec<BranchInfo>>,
+    /// Cache timestamp
+    cached_at: Option<SystemTime>,
+    /// Cache TTL (time to live)
+    ttl: Duration,
+    /// Maximum cache age before forced refresh
+    max_age: Duration,
+}
+
+impl BranchCache {
+    /// Create a new branch cache
+    pub fn new() -> Self {
+        Self {
+            cached_branches: None,
+            cached_at: None,
+            ttl: Duration::from_secs(60),      // Cache for 60 seconds (branches change less frequently)
+            max_age: Duration::from_secs(600), // Force refresh after 10 minutes
+        }
+    }
+
+    /// Create a cache with custom TTL
+    pub fn with_ttl(ttl: Duration) -> Self {
+        Self {
+            cached_branches: None,
+            cached_at: None,
+            ttl,
+            max_age: ttl * 10,
+        }
+    }
+
+    /// Store branches in cache
+    pub fn store(&mut self, branches: Vec<BranchInfo>) {
+        self.cached_branches = Some(branches);
+        self.cached_at = Some(SystemTime::now());
+    }
+
+    /// Get cached branches if still fresh
+    pub fn get_if_fresh(&self) -> Option<&Vec<BranchInfo>> {
+        if self.is_expired() {
+            None
+        } else {
+            self.cached_branches.as_ref()
+        }
+    }
+
+    /// Check if cache has expired
+    pub fn is_expired(&self) -> bool {
+        if let Some(cached_at) = &self.cached_at {
+            let age = cached_at.elapsed().unwrap_or(Duration::MAX);
+            age > self.ttl
+        } else {
+            true
+        }
+    }
+
+    /// Check if cache has exceeded maximum age
+    pub fn is_stale(&self) -> bool {
+        if let Some(cached_at) = &self.cached_at {
+            let age = cached_at.elapsed().unwrap_or(Duration::MAX);
+            age > self.max_age
+        } else {
+            true
+        }
+    }
+
+    /// Invalidate the cache manually
+    pub fn invalidate(&mut self) {
+        self.cached_branches = None;
+        self.cached_at = None;
+    }
+
+    /// Get cache statistics
+    pub fn stats(&self) -> CacheStats {
+        CacheStats {
+            is_cached: self.cached_branches.is_some(),
+            cached_entries: self.cached_branches.as_ref().map(|s| s.len()).unwrap_or(0),
+            cached_at: self.cached_at.and_then(|time| {
+                time.duration_since(SystemTime::UNIX_EPOCH)
+                    .ok()
+                    .and_then(|d| DateTime::from_timestamp(d.as_secs() as i64, 0))
+            }),
+            age_seconds: self
+                .cached_at
+                .and_then(|time| time.elapsed().ok())
+                .map(|d| d.as_secs())
+                .unwrap_or(0),
+            is_fresh: !self.is_expired(),
+            is_stale: self.is_stale(),
+            ttl_seconds: self.ttl.as_secs(),
+        }
+    }
+
+    /// Set TTL for cache entries
+    pub fn set_ttl(&mut self, ttl: Duration) {
+        self.ttl = ttl;
+        self.max_age = ttl * 10;
+    }
+}
+
+impl Default for BranchCache {
     fn default() -> Self {
         Self::new()
     }

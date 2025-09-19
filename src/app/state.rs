@@ -120,6 +120,16 @@ impl AppState {
         });
     }
 
+    /// Add an info message to the notification system
+    pub fn add_info(&mut self, message: String) {
+        self.notification_state.info_messages.push(InfoNotification {
+            id: Uuid::new_v4(),
+            message,
+            timestamp: Utc::now(),
+            acknowledged: false,
+        });
+    }
+
     /// Get current active tab
     pub fn current_tab(&self) -> TabType {
         self.ui_state.current_tab

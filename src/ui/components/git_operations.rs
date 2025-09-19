@@ -13,10 +13,21 @@ use std::collections::HashMap;
 use crate::{
     app::state::AppState,
     error::AppResult,
+    git::CommitInfo,
     ui::theme::Theme,
 };
 
 use super::{Component, InputModal, ConfirmationModal, ProgressModal, Modal, ModalResult};
+
+/// Safe UTF-8 string truncation utility
+fn safe_truncate_string(s: &str, max_chars: usize) -> String {
+    if s.chars().count() <= max_chars {
+        s.to_string()
+    } else {
+        let truncated: String = s.chars().take(max_chars - 3).collect();
+        format!("{}...", truncated)
+    }
+}
 
 /// Git operation types
 #[derive(Debug, Clone, PartialEq)]
@@ -88,6 +99,68 @@ impl GitOperation {
     }
 }
 
+/// Focus state for operations tab
+#[derive(Debug, Clone, PartialEq)]
+pub enum OperationsFocus {
+    OperationList,
+    HistoryList,
+}
+
+/// Shortcut manager for conflict detection and help
+#[derive(Debug, Clone)]
+pub struct ShortcutManager {
+    /// Last warning message about conflicts
+    last_warning: Option<String>,
+    /// Timestamp of last warning to auto-clear after delay
+    warning_timestamp: Option<std::time::Instant>,
+}
+
+impl ShortcutManager {
+    pub fn new() -> Self {
+        Self {
+            last_warning: None,
+            warning_timestamp: None,
+        }
+    }
+
+    /// Check if a key conflicts with main app shortcuts
+    pub fn check_conflict(&mut self, key: KeyEvent) -> Option<String> {
+        match key.code {
+            KeyCode::Tab if !key.modifiers.contains(KeyModifiers::CONTROL | KeyModifiers::SHIFT) => {
+                Some("Tab reserved for main app navigation. Use Ctrl+Tab for focus switching.".to_string())
+            }
+            KeyCode::Char(' ') if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+                Some("Space reserved for main app focus. Use Ctrl+Space for tab switching.".to_string())
+            }
+            _ => None
+        }
+    }
+
+    /// Set a warning message
+    pub fn set_warning(&mut self, message: String) {
+        self.last_warning = Some(message);
+        self.warning_timestamp = Some(std::time::Instant::now());
+    }
+
+    /// Get current warning, clearing it if expired
+    pub fn get_warning(&mut self) -> Option<String> {
+        if let Some(timestamp) = self.warning_timestamp {
+            if timestamp.elapsed() > std::time::Duration::from_secs(3) {
+                self.last_warning = None;
+                self.warning_timestamp = None;
+                return None;
+            }
+        }
+        self.last_warning.clone()
+    }
+
+    /// Clear current warning
+    pub fn clear_warning(&mut self) {
+        self.last_warning = None;
+        self.warning_timestamp = None;
+    }
+}
+
 /// Git operations interface component
 pub struct GitOperationsComponent {
     is_open: bool,
@@ -96,6 +169,9 @@ pub struct GitOperationsComponent {
     operation_state: ListState,
     current_tab: usize,
     tab_names: Vec<String>,
+
+    // Focus state for operations tab
+    operations_focus: OperationsFocus,
 
     // Modals
     input_modal: InputModal,
@@ -109,10 +185,18 @@ pub struct GitOperationsComponent {
     tag_data: TagData,
     remote_data: RemoteData,
 
+    // History tab data
+    history_commits: Vec<CommitInfo>,
+    history_state: ListState,
+    history_selected: usize,
+
     // Status
     current_operation: Option<GitOperation>,
     operation_progress: Option<String>,
     operation_error: Option<String>,
+
+    // Shortcut conflict detection
+    shortcut_manager: ShortcutManager,
 }
 
 /// Rebase operation data
@@ -274,6 +358,9 @@ impl GitOperationsComponent {
             "Help".to_string(),
         ];
 
+        let mut history_state = ListState::default();
+        history_state.select(Some(0));
+
         Self {
             is_open: false,
             selected_operation: 0,
@@ -281,6 +368,7 @@ impl GitOperationsComponent {
             operation_state,
             current_tab: 0,
             tab_names,
+            operations_focus: OperationsFocus::OperationList, // Start with operations list focused
             input_modal: InputModal::new(),
             confirmation_modal: ConfirmationModal::new(),
             progress_modal: ProgressModal::new(),
@@ -289,9 +377,13 @@ impl GitOperationsComponent {
             stash_data: StashData::default(),
             tag_data: TagData::default(),
             remote_data: RemoteData::default(),
+            history_commits: Vec::new(),
+            history_state,
+            history_selected: 0,
             current_operation: None,
             operation_progress: None,
             operation_error: None,
+            shortcut_manager: ShortcutManager::new(),
         }
     }
 
@@ -300,6 +392,26 @@ impl GitOperationsComponent {
         self.is_open = true;
         self.current_tab = 0;
         self.operation_state.select(Some(0));
+        self.operations_focus = OperationsFocus::OperationList; // Reset focus to operations list
+
+        // Initialize history state if we have commits
+        if !self.history_commits.is_empty() {
+            self.history_state.select(Some(0));
+            self.history_selected = 0;
+        }
+    }
+
+    /// Load commit history for History tab
+    pub async fn load_commit_history(&mut self, state: &AppState) {
+        if let Some(git_service) = &state.git_service {
+            if let Ok(commits) = git_service.get_commit_history(50).await {
+                self.history_commits = commits;
+                if !self.history_commits.is_empty() {
+                    self.history_state.select(Some(0));
+                    self.history_selected = 0;
+                }
+            }
+        }
     }
 
     /// Close Git operations interface
@@ -332,25 +444,75 @@ impl GitOperationsComponent {
         };
     }
 
-    /// Move selection up
+    /// Move selection up with boundary handling
     pub fn move_up(&mut self) {
         let len = self.operations.len();
-        if len > 0 {
-            let selected = self.operation_state.selected().unwrap_or(0);
-            let new_selected = if selected == 0 { len - 1 } else { selected - 1 };
-            self.operation_state.select(Some(new_selected));
-            self.selected_operation = new_selected;
+        if len == 0 {
+            // Clear selection if no operations
+            self.operation_state.select(None);
+            return;
+        }
+
+        let selected = self.operation_state.selected().unwrap_or(0);
+        let new_selected = if selected == 0 { len - 1 } else { selected - 1 };
+        self.operation_state.select(Some(new_selected));
+        self.selected_operation = new_selected;
+    }
+
+    /// Move selection down with boundary handling
+    pub fn move_down(&mut self) {
+        let len = self.operations.len();
+        if len == 0 {
+            // Clear selection if no operations
+            self.operation_state.select(None);
+            return;
+        }
+
+        let selected = self.operation_state.selected().unwrap_or(0);
+        let new_selected = (selected + 1) % len;
+        self.operation_state.select(Some(new_selected));
+        self.selected_operation = new_selected;
+    }
+
+    /// Move history selection up with bounds checking
+    pub fn move_history_up(&mut self) {
+        let len = self.history_commits.len();
+        if len == 0 {
+            // Clear selection if no history
+            self.history_state.select(None);
+            self.history_selected = 0;
+            return;
+        }
+
+        let old_selected = self.history_selected;
+        self.history_selected = if self.history_selected == 0 {
+            len - 1
+        } else {
+            self.history_selected - 1
+        };
+
+        // Only update state if actually changed
+        if old_selected != self.history_selected {
+            self.history_state.select(Some(self.history_selected));
         }
     }
 
-    /// Move selection down
-    pub fn move_down(&mut self) {
-        let len = self.operations.len();
-        if len > 0 {
-            let selected = self.operation_state.selected().unwrap_or(0);
-            let new_selected = (selected + 1) % len;
-            self.operation_state.select(Some(new_selected));
-            self.selected_operation = new_selected;
+    /// Move history selection down with bounds checking
+    pub fn move_history_down(&mut self) {
+        let len = self.history_commits.len();
+        if len == 0 {
+            // Clear selection if no history
+            self.history_state.select(None);
+            self.history_selected = 0;
+            return;
+        }
+
+        let old_selected = self.history_selected;
+        self.history_selected = (self.history_selected + 1) % len;
+
+        // Only update state if actually changed
+        if old_selected != self.history_selected {
+            self.history_state.select(Some(self.history_selected));
         }
     }
 
@@ -503,12 +665,13 @@ impl GitOperationsComponent {
         // Clear background
         frame.render_widget(Clear, modal_area);
 
-        // Split into tabs and content
+        // Split into tabs, content, and help bar
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(3), // Tabs
                 Constraint::Min(0),    // Content
+                Constraint::Length(2), // Help bar
             ])
             .split(modal_area);
 
@@ -518,7 +681,9 @@ impl GitOperationsComponent {
             .collect();
 
         let tabs = Tabs::new(tab_titles)
-            .block(Block::default().borders(Borders::ALL).title("Git Operations"))
+            .block(Block::default()
+                .borders(Borders::ALL)
+                .title("Git Operations"))
             .select(self.current_tab)
             .style(Style::default())
             .highlight_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
@@ -533,6 +698,39 @@ impl GitOperationsComponent {
             3 => self.render_help_tab(frame, chunks[1], theme),
             _ => {}
         }
+
+        // Render help bar at bottom
+        self.render_help_bar(frame, chunks[2], theme);
+    }
+
+    /// Render help bar with current shortcuts
+    fn render_help_bar(&self, frame: &mut Frame, area: Rect, theme: &Theme) {
+        let help_text = if self.current_tab == 0 {
+            match self.operations_focus {
+                OperationsFocus::OperationList => {
+                    " Operations Panel | Ctrl+Tab: ⇄ History | →: Focus History | ↑↓: Navigate | Enter: Execute | Ctrl+Space: Next Tab | Esc: Exit"
+                }
+                OperationsFocus::HistoryList => {
+                    " History Panel | Ctrl+Tab: ⇄ Operations | ←: Focus Operations | ↑↓: Navigate | PgUp/Dn: ±5 | Ctrl+Space: Next Tab | Esc: Exit"
+                }
+            }
+        } else {
+            match self.current_tab {
+                1 => " Status Tab | Ctrl+Space: Next Tab | Shift+Tab: Previous Tab | Esc: Exit",
+                2 => " History Tab | ↑↓: Navigate | PgUp/Dn: Quick Scroll | Ctrl+Space: Next Tab | Shift+Tab: Previous Tab | Esc: Exit",
+                3 => " Help Tab | Ctrl+Space: Next Tab | Shift+Tab: Previous Tab | Esc: Exit",
+                _ => " Ctrl+Space: Next Tab | Shift+Tab: Previous Tab | Esc: Exit"
+            }
+        };
+
+        let help_bar = Paragraph::new(Line::from(help_text))
+            .block(Block::default()
+                .borders(Borders::TOP)
+                .border_style(Style::default().fg(Color::DarkGray))
+                .title("Git Operations Shortcuts"))
+            .style(Style::default().fg(Color::Gray));
+
+        frame.render_widget(help_bar, area);
     }
 
     /// Render operations tab
@@ -541,11 +739,11 @@ impl GitOperationsComponent {
             .direction(Direction::Horizontal)
             .constraints([
                 Constraint::Percentage(40), // Operation list
-                Constraint::Percentage(60), // Operation details
+                Constraint::Percentage(60), // History commits list (previously operation details)
             ])
             .split(area);
 
-        // Render operation list
+        // Render operation list with focus indication
         let items: Vec<ListItem> = self.operations.iter().map(|op| {
             let line = Line::from(vec![
                 Span::raw(op.icon()),
@@ -555,20 +753,131 @@ impl GitOperationsComponent {
             ListItem::new(line)
         }).collect();
 
+        let operation_title = if self.operations_focus == OperationsFocus::OperationList {
+            "🎯 Operations [FOCUSED]"
+        } else {
+            "Operations"
+        };
+
         let operation_list = List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("Operations"))
-            .highlight_style(
+            .block(Block::default()
+                .borders(Borders::ALL)
+                .title(operation_title)
+                .border_style(if self.operations_focus == OperationsFocus::OperationList {
+                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default().fg(Color::DarkGray)
+                }))
+            .highlight_style(if self.operations_focus == OperationsFocus::OperationList {
                 Style::default()
                     .bg(theme.selection_color())
                     .add_modifier(Modifier::BOLD)
-            )
-            .highlight_symbol("▶ ");
+            } else {
+                Style::default()
+            })
+            .highlight_symbol(if self.operations_focus == OperationsFocus::OperationList { "▶ " } else { "  " });
 
         frame.render_stateful_widget(operation_list, chunks[0], &mut self.operation_state);
 
-        // Render operation details
-        if let Some(operation) = self.operations.get(self.selected_operation) {
-            self.render_operation_details(frame, chunks[1], operation, theme);
+        // Render history commits in the right panel
+        self.render_history_panel(frame, chunks[1], theme);
+    }
+
+    /// Render history panel in the operations tab
+    fn render_history_panel(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
+        if self.history_commits.is_empty() {
+            let lines = vec![
+                Line::from("Git Commit History"),
+                Line::from(""),
+                Line::from("Loading commit history..."),
+                Line::from(""),
+                Line::from("Shortcuts are shown in the bottom bar."),
+            ];
+
+            let history_widget = Paragraph::new(lines)
+                .block(Block::default().borders(Borders::ALL).title("History"))
+                .style(theme.text_style())
+                .wrap(Wrap { trim: true });
+
+            frame.render_widget(history_widget, area);
+            return;
+        }
+
+        // Split area for commit list and details
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(60), // Commit list
+                Constraint::Percentage(40), // Commit details
+            ])
+            .split(area);
+
+        // Render commit list
+        let items: Vec<ListItem> = self.history_commits.iter().take(15).map(|commit| {
+            let short_hash = &commit.hash[..std::cmp::min(8, commit.hash.len())];
+            let short_message = safe_truncate_string(&commit.message, 40);
+
+            let line = Line::from(vec![
+                Span::styled(
+                    format!("{} ", short_hash),
+                    Style::default().fg(Color::Yellow)
+                ),
+                Span::raw(short_message),
+            ]);
+            ListItem::new(line)
+        }).collect();
+
+        let history_title = if self.operations_focus == OperationsFocus::HistoryList {
+            format!("🎯 History ({}) [FOCUSED]", self.history_commits.len())
+        } else {
+            format!("History ({})", self.history_commits.len())
+        };
+
+        let commit_list = List::new(items)
+            .block(Block::default()
+                .borders(Borders::ALL)
+                .title(history_title)
+                .border_style(if self.operations_focus == OperationsFocus::HistoryList {
+                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default().fg(Color::DarkGray)
+                }))
+            .highlight_style(if self.operations_focus == OperationsFocus::HistoryList {
+                Style::default()
+                    .bg(theme.selection_color())
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default()
+            })
+            .highlight_symbol(if self.operations_focus == OperationsFocus::HistoryList { "▶ " } else { "  " });
+
+        frame.render_stateful_widget(commit_list, chunks[0], &mut self.history_state);
+
+        // Render selected commit details
+        if let Some(commit) = self.history_commits.get(self.history_selected) {
+            let lines = vec![
+                Line::from(vec![
+                    Span::styled("Hash: ", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(&commit.hash[..std::cmp::min(16, commit.hash.len())]),
+                ]),
+                Line::from(vec![
+                    Span::styled("Author: ", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(&commit.author),
+                ]),
+                Line::from(vec![
+                    Span::styled("Date: ", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(commit.date.format("%Y-%m-%d %H:%M").to_string()),
+                ]),
+                Line::from(""),
+                Line::from(commit.message.as_str()),
+            ];
+
+            let details_widget = Paragraph::new(lines)
+                .block(Block::default().borders(Borders::ALL).title("Commit Details"))
+                .style(theme.text_style())
+                .wrap(Wrap { trim: true });
+
+            frame.render_widget(details_widget, chunks[1]);
         }
     }
 
@@ -792,11 +1101,20 @@ impl GitOperationsComponent {
     }
 
     /// Render status tab
-    fn render_status_tab(&self, frame: &mut Frame, area: Rect, theme: &Theme) {
+    fn render_status_tab(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
         let mut lines = vec![
             Line::from("Git Operations Status"),
             Line::from(""),
         ];
+
+        // Show shortcut conflict warning if any
+        if let Some(warning) = self.shortcut_manager.get_warning() {
+            lines.push(Line::from(Span::styled(
+                format!("⚠️ Shortcut Conflict: {}", warning),
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+            )));
+            lines.push(Line::from(""));
+        }
 
         if let Some(ref operation) = self.current_operation {
             lines.push(Line::from(format!("Current Operation: {}", operation.as_str())));
@@ -817,6 +1135,11 @@ impl GitOperationsComponent {
 
         lines.extend(vec![
             Line::from(""),
+            Line::from("💡 Shortcut Tips:"),
+            Line::from("• Use Ctrl+Tab for focus switching (not Tab)"),
+            Line::from("• Use Ctrl+Space for tab switching (not Space)"),
+            Line::from("• Regular Tab/Space are reserved for main app"),
+            Line::from(""),
             Line::from("Recent Operations:"),
             Line::from("• Rebase completed successfully"),
             Line::from("• Merge with conflicts resolved"),
@@ -824,7 +1147,7 @@ impl GitOperationsComponent {
         ]);
 
         let status_widget = Paragraph::new(lines)
-            .block(Block::default().borders(Borders::ALL).title("Status"))
+            .block(Block::default().borders(Borders::ALL).title("Status & Shortcuts"))
             .style(theme.text_style())
             .wrap(Wrap { trim: true });
 
@@ -832,52 +1155,137 @@ impl GitOperationsComponent {
     }
 
     /// Render history tab
-    fn render_history_tab(&self, frame: &mut Frame, area: Rect, theme: &Theme) {
-        let lines = vec![
-            Line::from("Operation History"),
-            Line::from(""),
-            Line::from("Recent operations will be displayed here."),
-            Line::from(""),
-            Line::from("• 2024-01-15 14:30 - Interactive rebase completed"),
-            Line::from("• 2024-01-15 13:45 - Cherry-pick applied: a1b2c3d"),
-            Line::from("• 2024-01-15 12:15 - Merge branch 'feature' into main"),
-            Line::from("• 2024-01-15 11:30 - Reset HEAD~2 (soft)"),
-            Line::from("• 2024-01-15 10:45 - Stash created: 'WIP changes'"),
-        ];
+    fn render_history_tab(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
+        if self.history_commits.is_empty() {
+            let lines = vec![
+                Line::from("Git Commit History"),
+                Line::from(""),
+                Line::from("No commits found or repository not initialized."),
+                Line::from(""),
+                Line::from("Use ↑/↓ to navigate commits when available."),
+            ];
 
-        let history_widget = Paragraph::new(lines)
-            .block(Block::default().borders(Borders::ALL).title("History"))
-            .style(theme.text_style())
-            .wrap(Wrap { trim: true });
+            let history_widget = Paragraph::new(lines)
+                .block(Block::default().borders(Borders::ALL).title("History"))
+                .style(theme.text_style())
+                .wrap(Wrap { trim: true });
 
-        frame.render_widget(history_widget, area);
+            frame.render_widget(history_widget, area);
+            return;
+        }
+
+        // Create chunks for commit list and details
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage(60), // Commit list
+                Constraint::Percentage(40), // Commit details
+            ])
+            .split(area);
+
+        // Render commit list
+        let items: Vec<ListItem> = self.history_commits.iter().map(|commit| {
+            let short_hash = &commit.hash[..std::cmp::min(8, commit.hash.len())];
+            let short_message = safe_truncate_string(&commit.message, 50);
+
+            let line = Line::from(vec![
+                Span::styled(
+                    format!("{} ", short_hash),
+                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                ),
+                Span::styled(
+                    short_message,
+                    Style::default().fg(Color::White)
+                ),
+            ]);
+            ListItem::new(line)
+        }).collect();
+
+        let commit_list = List::new(items)
+            .block(Block::default().borders(Borders::ALL).title("Commits"))
+            .highlight_style(
+                Style::default()
+                    .bg(theme.selection_color())
+                    .add_modifier(Modifier::BOLD)
+            )
+            .highlight_symbol("▶ ");
+
+        frame.render_stateful_widget(commit_list, chunks[0], &mut self.history_state);
+
+        // Render commit details
+        if let Some(commit) = self.history_commits.get(self.history_selected) {
+            let lines = vec![
+                Line::from(vec![
+                    Span::styled("Hash: ", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(&commit.hash),
+                ]),
+                Line::from(""),
+                Line::from(vec![
+                    Span::styled("Author: ", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(&commit.author),
+                ]),
+                Line::from(""),
+                Line::from(vec![
+                    Span::styled("Date: ", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(commit.date.format("%Y-%m-%d %H:%M:%S").to_string()),
+                ]),
+                Line::from(""),
+                Line::from(vec![
+                    Span::styled("Message: ", Style::default().add_modifier(Modifier::BOLD)),
+                ]),
+                Line::from(commit.message.as_str()),
+            ];
+
+            let details_widget = Paragraph::new(lines)
+                .block(Block::default().borders(Borders::ALL).title("Commit Details"))
+                .style(theme.text_style())
+                .wrap(Wrap { trim: true });
+
+            frame.render_widget(details_widget, chunks[1]);
+        }
     }
 
     /// Render help tab
     fn render_help_tab(&self, frame: &mut Frame, area: Rect, theme: &Theme) {
         let lines = vec![
-            Line::from("Git Operations Help"),
+            Line::from("Git Operations Help & Shortcuts Reference"),
             Line::from(""),
-            Line::from("Keyboard Shortcuts:"),
-            Line::from("• ↑/↓   - Navigate operations"),
-            Line::from("• Space - Switch between tabs"),
-            Line::from("• Enter - Execute selected operation"),
-            Line::from("• Esc   - Close Git operations"),
+            Line::from("🎯 Context-Aware Navigation:"),
             Line::from(""),
-            Line::from("Operation Descriptions:"),
+            Line::from("Operations Tab (Dual Panel):"),
+            Line::from("• Ctrl+Tab   - Switch focus between Operations ⇄ History panels"),
+            Line::from("• ←/→        - Quick focus jump: ← Operations | → History"),
+            Line::from("• ↑/↓        - Navigate in currently focused panel"),
+            Line::from("• PageUp/Dn  - Quick scroll history (±5 commits at once)"),
+            Line::from("• Enter      - Execute selected Git operation"),
             Line::from(""),
-            Line::from("Rebase: Rewrite commit history by moving commits"),
-            Line::from("Cherry Pick: Apply specific commits from other branches"),
-            Line::from("Merge: Combine changes from different branches"),
-            Line::from("Reset: Move HEAD to a specific commit"),
-            Line::from("Stash: Temporarily save work-in-progress changes"),
-            Line::from("Tags: Create, delete, and manage repository tags"),
-            Line::from("Remotes: Manage remote repository connections"),
-            Line::from("Hooks: Configure Git hooks for automation"),
+            Line::from("Other Tabs (Status/History/Help):"),
+            Line::from("• ↑/↓        - Navigate items in the active list"),
+            Line::from("• PageUp/Dn  - Quick scroll (where applicable)"),
+            Line::from(""),
+            Line::from("🏷️ Tab Management:"),
+            Line::from("• Ctrl+Space - Next tab (avoids main app Tab conflict)"),
+            Line::from("• Shift+Tab  - Previous tab"),
+            Line::from("• 1-4        - Jump directly to Operations/Status/History/Help"),
+            Line::from(""),
+            Line::from("🎨 Visual Indicators:"),
+            Line::from("• ◆ marker   - Shows active panel in Operations tab"),
+            Line::from("• Yellow border - Indicates focused panel"),
+            Line::from("• ▶ symbol   - Selected item in lists"),
+            Line::from(""),
+            Line::from("⚠️ Key Conflict Avoidance:"),
+            Line::from("• Tab/Shift+Tab reserved for main app navigation"),
+            Line::from("• Space reserved for main app focus switching"),
+            Line::from("• Git Operations uses Ctrl+ modifiers to avoid conflicts"),
+            Line::from(""),
+            Line::from("💡 Tips:"),
+            Line::from("• Bottom bar shows context-sensitive shortcuts"),
+            Line::from("• Use Esc anytime to exit Git Operations interface"),
+            Line::from("• All shortcuts work immediately without confirmation"),
         ];
 
         let help_widget = Paragraph::new(lines)
-            .block(Block::default().borders(Borders::ALL).title("Help"))
+            .block(Block::default().borders(Borders::ALL).title("📚 Complete Shortcuts Guide"))
             .style(theme.text_style())
             .wrap(Wrap { trim: true });
 
@@ -934,6 +1342,12 @@ impl Component for GitOperationsComponent {
             return Ok(());
         }
 
+        // Check for shortcut conflicts first
+        if let Some(warning) = self.shortcut_manager.check_conflict(key) {
+            self.shortcut_manager.set_warning(warning);
+            return Ok(()); // Don't process conflicting keys
+        }
+
         // Handle modal events first
         if self.input_modal.is_open() {
             match self.input_modal.handle_key_event(key)? {
@@ -986,22 +1400,147 @@ impl Component for GitOperationsComponent {
         // Handle main interface events
         match key.code {
             KeyCode::Esc => self.close(),
-            KeyCode::Char(' ') => self.next_tab(),
-            KeyCode::BackTab => self.previous_tab(),
+            // Direct tab navigation with number keys (1-4)
+            KeyCode::Char(c @ '1'..='4') => {
+                let tab_index = (c as u8 - b'1') as usize;
+                if tab_index < self.tab_names.len() {
+                    self.current_tab = tab_index;
+                    // Reset focus to operations list when switching to operations tab
+                    if tab_index == 0 {
+                        self.operations_focus = OperationsFocus::OperationList;
+                    }
+                }
+            }
+            // Use Ctrl+Tab instead of Tab to avoid conflict with main tab navigation
+            KeyCode::Tab if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                // Ctrl+Tab to switch focus between panels in operations tab
+                if self.current_tab == 0 {
+                    if self.history_commits.is_empty() {
+                        // If no history, show helpful message and stay on operations
+                        self.operation_error = Some("No commit history available. Focus remains on operations list.".to_string());
+                        // Clear error after 3 seconds would be nice, but we'll just keep focus on operations
+                    } else {
+                        // Normal focus switching
+                        self.operations_focus = match self.operations_focus {
+                            OperationsFocus::OperationList => OperationsFocus::HistoryList,
+                            OperationsFocus::HistoryList => OperationsFocus::OperationList,
+                        };
+                        // Clear any previous error
+                        self.operation_error = None;
+                    }
+                }
+            }
+            // Use Ctrl+Space instead of Space to switch tabs (avoid conflicts)
+            KeyCode::Char(' ') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                self.next_tab();
+            }
+            // Use Shift+Tab for previous tab
+            KeyCode::Tab if key.modifiers.contains(KeyModifiers::SHIFT) => {
+                self.previous_tab();
+            }
             KeyCode::Up => {
                 if self.current_tab == 0 {
-                    self.move_up();
+                    // In operations tab, navigate based on focus
+                    match self.operations_focus {
+                        OperationsFocus::OperationList => self.move_up(),
+                        OperationsFocus::HistoryList => self.move_history_up(),
+                    }
+                } else if self.current_tab == 2 {
+                    // History tab
+                    self.move_history_up();
                 }
             }
             KeyCode::Down => {
                 if self.current_tab == 0 {
-                    self.move_down();
+                    // In operations tab, navigate based on focus
+                    match self.operations_focus {
+                        OperationsFocus::OperationList => self.move_down(),
+                        OperationsFocus::HistoryList => self.move_history_down(),
+                    }
+                } else if self.current_tab == 2 {
+                    // History tab
+                    self.move_history_down();
+                }
+            }
+            KeyCode::Left => {
+                if self.current_tab == 0 {
+                    // Switch focus to operations list
+                    self.operations_focus = OperationsFocus::OperationList;
+                }
+            }
+            KeyCode::Right => {
+                if self.current_tab == 0 {
+                    if !self.history_commits.is_empty() {
+                        // Switch focus to history panel
+                        self.operations_focus = OperationsFocus::HistoryList;
+                        self.operation_error = None; // Clear any error
+                    } else {
+                        // Show helpful message when no history is available
+                        self.operation_error = Some("No commit history available to focus on.".to_string());
+                    }
+                }
+            }
+            KeyCode::PageUp => {
+                // Enhanced quick navigation with feedback
+                match self.current_tab {
+                    0 => {
+                        // Operations tab - only works when history panel is focused
+                        if self.operations_focus == OperationsFocus::HistoryList && !self.history_commits.is_empty() {
+                            let len = self.history_commits.len();
+                            let old_selected = self.history_selected;
+                            self.history_selected = self.history_selected.saturating_sub(5);
+                            if old_selected != self.history_selected {
+                                self.history_state.select(Some(self.history_selected));
+                            }
+                        }
+                    }
+                    2 => {
+                        // History tab - always works
+                        if !self.history_commits.is_empty() {
+                            let len = self.history_commits.len();
+                            let old_selected = self.history_selected;
+                            self.history_selected = self.history_selected.saturating_sub(5);
+                            if old_selected != self.history_selected {
+                                self.history_state.select(Some(self.history_selected));
+                            }
+                        }
+                    }
+                    _ => {} // No action for other tabs
+                }
+            }
+            KeyCode::PageDown => {
+                // Enhanced quick navigation with feedback
+                match self.current_tab {
+                    0 => {
+                        // Operations tab - only works when history panel is focused
+                        if self.operations_focus == OperationsFocus::HistoryList && !self.history_commits.is_empty() {
+                            let len = self.history_commits.len();
+                            let old_selected = self.history_selected;
+                            self.history_selected = (self.history_selected + 5).min(len - 1);
+                            if old_selected != self.history_selected {
+                                self.history_state.select(Some(self.history_selected));
+                            }
+                        }
+                    }
+                    2 => {
+                        // History tab - always works
+                        if !self.history_commits.is_empty() {
+                            let len = self.history_commits.len();
+                            let old_selected = self.history_selected;
+                            self.history_selected = (self.history_selected + 5).min(len - 1);
+                            if old_selected != self.history_selected {
+                                self.history_state.select(Some(self.history_selected));
+                            }
+                        }
+                    }
+                    _ => {} // No action for other tabs
                 }
             }
             KeyCode::Enter => {
-                if self.current_tab == 0 {
+                if self.current_tab == 0 && self.operations_focus == OperationsFocus::OperationList {
                     self.execute_selected_operation()?;
                 }
+                // Could add functionality for history list Enter key here
             }
             _ => {}
         }

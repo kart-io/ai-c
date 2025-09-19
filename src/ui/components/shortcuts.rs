@@ -276,7 +276,7 @@ impl ShortcutsManager {
                 "Refresh current view"
             ),
             ShortcutDefinition::new(
-                Shortcut::new(KeyCode::F(1), KeyModifiers::empty()),
+                Shortcut::new(KeyCode::Char('?'), KeyModifiers::empty()),
                 ShortcutAction::Help,
                 ShortcutContext::Global,
                 "Show help"

@@ -205,6 +205,27 @@ pub struct StashInfo {
     pub branch: String,
 }
 
+/// GitFlow status information
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GitFlowStatus {
+    /// Number of feature branches
+    pub feature_branches: usize,
+    /// Number of release branches
+    pub release_branches: usize,
+    /// Number of hotfix branches
+    pub hotfix_branches: usize,
+    /// Number of support branches
+    pub support_branches: usize,
+    /// Current branch name
+    pub current_branch: Option<String>,
+    /// Whether the repository has GitFlow configuration
+    pub is_gitflow_repo: bool,
+    /// Main/master branch name
+    pub main_branch: String,
+    /// Develop branch name
+    pub develop_branch: String,
+}
+
 /// Commit information
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CommitInfo {

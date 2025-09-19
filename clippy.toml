@@ -12,16 +12,5 @@ too-many-lines-threshold = 120
 # Performance lints
 avoid-breaking-exported-api = false
 
-# Documentation requirements
-missing-docs-in-private-items = false
-
-# Allow certain patterns common in async code
-single-match-else = false
-result-large-err = false
-
 # TUI-specific allowances
-enum-variant-names = false
-module-name-repetitions = false
-
-# Git operation specific
-similar-names-threshold = 5
+# Allow certain patterns common in TUI development

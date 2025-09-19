@@ -4,6 +4,7 @@
 //! responsive design and keyboard navigation.
 
 pub mod components;
+pub mod keyboard;
 pub mod layout;
 pub mod theme;
 pub mod diff;
@@ -78,10 +79,24 @@ impl UI {
 
         // Render bottom help bar
         self.render_help_bar(frame, main_chunks[3], state);
+
+        // Render help overlay if visible (rendered last to appear on top)
+        self.components.help.render(frame, size, state, &self.theme);
     }
 
     /// Handle key events
     pub fn handle_key_event(&mut self, key: KeyEvent, state: &mut AppState) -> AppResult<()> {
+        // Handle help system first (highest priority)
+        if self.components.help.handle_key_event(key, state)? {
+            return Ok(());
+        }
+
+        // Handle global help toggle
+        if matches!(key.code, KeyCode::Char('?')) {
+            self.components.help.toggle();
+            return Ok(());
+        }
+
         // Handle global selection and copy shortcuts
         if key.modifiers.contains(KeyModifiers::CONTROL) {
             match key.code {
@@ -172,7 +187,12 @@ impl UI {
             KeyCode::Up | KeyCode::Char('k') |
             KeyCode::Down | KeyCode::Char('j') |
             KeyCode::Enter |
-            KeyCode::Char(' ') => {
+            KeyCode::Char(' ') |
+            KeyCode::PageUp | KeyCode::PageDown |
+            KeyCode::Char('m') | KeyCode::Char('f') | KeyCode::Char('a') |
+            KeyCode::Char('r') | KeyCode::Char('l') | KeyCode::Char('s') |
+            KeyCode::Char('p') | KeyCode::Char('d') | KeyCode::Char('c') |
+            KeyCode::Char('n') | KeyCode::Home | KeyCode::End => {
                 // Forward to the current active tab component
                 match state.current_tab() {
                     TabType::Branches => self.components.branches_tab.handle_key_event(key, state)?,
@@ -346,13 +366,13 @@ impl UI {
     /// Render bottom help/shortcuts bar
     fn render_help_bar(&self, frame: &mut Frame, area: Rect, state: &AppState) {
         let help_text = match state.current_tab() {
-            TabType::Branches => "↑/↓: Select branch | Space: Switch panel | Enter: Checkout | 1-7: Switch tabs",
-            TabType::Tags => "↑/↓: Select tag | Space: Switch panel | Enter: View tag | 1-7: Switch tabs",
-            TabType::Stash => "↑/↓: Select stash | Space: Switch panel | Enter: Apply | 1-7: Switch tabs",
-            TabType::Status => "↑/↓: Select file | Space: Switch panel | Enter: Stage | 1-7: Switch tabs",
-            TabType::Remotes => "↑/↓: Select remote | Space: Switch panel | Enter: Fetch | 1-7: Switch tabs",
-            TabType::History => "↑/↓: Select commit | Space: Switch panel | Enter: View | 1-7: Switch tabs",
-            TabType::GitFlow => "↑/↓: Navigate | Space: Switch panel | Enter: Execute | 1-7: Switch tabs",
+            TabType::Branches => "↑/↓: Select branch | Space: Switch panel | Enter: Checkout | ?: Help | 1-7: Switch tabs",
+            TabType::Tags => "↑/↓: Select tag | Space: Switch panel | Enter: View tag | ?: Help | 1-7: Switch tabs",
+            TabType::Stash => "↑/↓: Select stash | Space: Switch panel | Enter: Apply | ?: Help | 1-7: Switch tabs",
+            TabType::Status => "↑/↓: Select file | Space: Switch panel | Enter: Stage | ?: Help | 1-7: Switch tabs",
+            TabType::Remotes => "↑/↓: Select remote | Space: Switch panel | Enter: Fetch | ?: Help | 1-7: Switch tabs",
+            TabType::History => "↑/↓: Select commit | Space: Switch panel | Enter: View | ?: Help | 1-7: Switch tabs",
+            TabType::GitFlow => "↑/↓: Navigate | Space: Switch panel | Enter: Execute | ?: Help | 1-7: Switch tabs",
         };
 
         let help_para = Paragraph::new(help_text)
@@ -701,6 +721,7 @@ struct UIComponents {
     pub remotes_tab: RemotesTabComponent,
     pub history_tab: CommitHistoryComponent,
     pub gitflow_tab: GitFlowTabComponent,
+    pub help: HelpComponent,
 }
 
 impl UIComponents {
@@ -714,6 +735,7 @@ impl UIComponents {
             remotes_tab: RemotesTabComponent::new(),
             history_tab: CommitHistoryComponent::new(),
             gitflow_tab: GitFlowTabComponent::new(),
+            help: HelpComponent::new(),
         }
     }
 

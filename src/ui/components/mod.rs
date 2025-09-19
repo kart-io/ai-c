@@ -20,6 +20,7 @@ pub mod search_cache;
 pub mod search_index;
 pub mod git_operations;
 pub mod agent_manager;
+pub mod help;
 
 pub use sidebar::SidebarComponent;
 pub use status_bar::StatusBarComponent;
@@ -39,6 +40,7 @@ pub use search_cache::{SearchCache, CacheKey, CacheStats};
 pub use search_index::{SearchIndex, SearchMatch, IndexStats};
 pub use git_operations::{GitOperationsComponent, GitOperation};
 pub use agent_manager::{AgentManagerComponent, AgentInfo, AgentStatus};
+pub use help::{HelpComponent, HelpCategory};
 
 use crossterm::event::KeyEvent;
 use ratatui::{layout::Rect, Frame};
